@@ -37,4 +37,29 @@ curl output in server side
 
 ## Part 3: Performance Testing and Understanding Response Times
 
+### Key Observations
+
+**📊 Response Time Distribution:**
+- Most requests: 60-75ms (good baseline performance)
+- 95th percentile: ~90-95ms
+- Occasional spikes: 100-130ms (5% of requests)
+- Pattern: Right-skewed distribution with long tail
+
+**⏱️ Consistency:**
+- Generally consistent performance throughout test
+- Random spikes, no time-based degradation
+- Moderate variability (20-25ms gap between median and 95th percentile)
+
+**🔍 Performance Issues:**
+- Single EC2 container shows resource constraints
+- Spikes likely due to CPU/memory competition or network latency
+- Would struggle with 100+ concurrent users
+
+## Part 4: Reading 
+What I found most interesting is how the author reduces all the complexity of distributed systems to just two simple facts:
+
+Information has speed limits
+Different components fail independently
+
+This approach is brilliant - whether it's consensus algorithms or consistency models, all the complex solutions are really just ways to deal with these two basic physical constraints. Tracing complex problems back to simple root causes - that's what good technical explanation should look like.
 
