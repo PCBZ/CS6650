@@ -37,6 +37,19 @@ curl output in server side
 
 ## Part 3: Performance Testing and Understanding Response Times
 
+### Result  
+<img width="1189" height="790" alt="image" src="https://github.com/user-attachments/assets/23e1ec0b-c7a0-4178-aa13-20c3360c43b9" />
+
+```bash
+Statistics:
+Total requests: 140
+Average response time: 71.30ms
+Median response time: 69.61ms
+95th percentile: 88.24ms
+99th percentile: 107.58ms
+Max response time: 126.57ms
+```
+
 ### Key Observations
 
 **📊 Response Time Distribution:**
