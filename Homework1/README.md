@@ -42,37 +42,31 @@ curl output in server side
 
 ```bash
 Statistics:
-Total requests: 140
-Average response time: 71.30ms
-Median response time: 69.61ms
-95th percentile: 88.24ms
-99th percentile: 107.58ms
-Max response time: 126.57ms
+Total requests: 50
+Average response time: 207.33ms
+Median response time: 136.85ms
+95th percentile: 551.64ms
+99th percentile: 1190.34ms
+Max response time: 1525.44ms
 ```
 
 ### Key Observations
 
 **📊 Response Time Distribution:**
-- Most requests: 60-75ms (good baseline performance)
-- 95th percentile: ~90-95ms
-- Occasional spikes: 100-130ms (5% of requests)
-- Pattern: Right-skewed distribution with long tail
+- Right-skewed distribution with long tail
+- High variability with occasional severe outliers
 
 **⏱️ Consistency:**
-- Generally consistent performance throughout test
-- Random spikes, no time-based degradation
-- Moderate variability (20-25ms gap between median and 95th percentile)
+- High variability throughout test period
+- Large gap between median and 95th percentile
 
 **🔍 Performance Issues:**
-- Single EC2 container shows resource constraints
-- Spikes likely due to CPU/memory competition or network latency
-- Would struggle with 100+ concurrent users
+- System shows signs of resource constraints
+- Potential bottlenecks in CPU, memory, or network
 
 ## Part 4: Reading 
-What I found most interesting is how the author reduces all the complexity of distributed systems to just two simple facts:
-
-Information has speed limits
-Different components fail independently
-
+The interesting part is how the author reduces all the complexity of distributed systems to just two simple facts:
+- Information has speed limits
+- Different components fail independently
 This approach is brilliant - whether it's consensus algorithms or consistency models, all the complex solutions are really just ways to deal with these two basic physical constraints. Tracing complex problems back to simple root causes - that's what good technical explanation should look like.
 
