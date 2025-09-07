@@ -68,5 +68,6 @@ Max response time: 1525.44ms
 The interesting part is how the author reduces all the complexity of distributed systems to just two simple facts:
 - Information has speed limits
 - Different components fail independently
+
 This approach is brilliant - whether it's consensus algorithms or consistency models, all the complex solutions are really just ways to deal with these two basic physical constraints. Tracing complex problems back to simple root causes - that's what good technical explanation should look like.
 
