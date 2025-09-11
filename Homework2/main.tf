@@ -15,7 +15,7 @@ provider "aws" {
   region     = "us-west-2" # Which region you are working on
 }
 
-# Your ec2 instance
+# Your first ec2 instance
 resource "aws_instance" "demo-instance" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = "t2.micro"
@@ -24,7 +24,20 @@ resource "aws_instance" "demo-instance" {
   key_name               = var.ssh_key_name
 
   tags = {
-    Name = "terraform-created-instance-:)"
+    Name = "terraform-created-instance-1"
+  }
+}
+
+# Your second ec2 instance
+resource "aws_instance" "demo-instance-2" {
+  ami                    = data.aws_ami.al2023.id
+  instance_type          = "t2.micro"
+  iam_instance_profile   = "LabInstanceProfile"
+  vpc_security_group_ids = [aws_security_group.ssh.id]
+  key_name               = var.ssh_key_name
+
+  tags = {
+    Name = "terraform-created-instance-2"
   }
 }
 
@@ -65,6 +78,18 @@ data "aws_ami" "al2023" {
   }
 }
 
-output "ec2_public_dns" {
+output "ec2_public_dns_1" {
   value = aws_instance.demo-instance.public_dns
+}
+
+output "ec2_public_dns_2" {
+  value = aws_instance.demo-instance-2.public_dns
+}
+
+output "ec2_public_ip_1" {
+  value = aws_instance.demo-instance.public_ip
+}
+
+output "ec2_public_ip_2" {
+  value = aws_instance.demo-instance-2.public_ip
 }
