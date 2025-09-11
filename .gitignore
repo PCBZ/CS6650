@@ -1,5 +1,6 @@
 # Ignore .pem files (private keys, certificates)
 *.pem
+*.tfvars
 
 # Go build artifacts
 *.exe
