@@ -28,3 +28,11 @@ Runing docker image on an AWS instance and response to a request
 
 Request API runing on AWS from local machine
 <img width="756" height="308" alt="image" src="https://github.com/user-attachments/assets/b9c0a65e-f8ba-4c37-818c-53f19bd34159" />
+
+## Part 4: Check this out!
+
+<img width="612" height="618" alt="image" src="https://github.com/user-attachments/assets/3b3208b1-542a-44bd-b5d9-65929fada697" />   
+<img width="417" height="114" alt="image" src="https://github.com/user-attachments/assets/ac77ca13-85ef-4d46-b391-4c684e92c606" /><br>
+<img width="499" height="677" alt="image" src="https://github.com/user-attachments/assets/20e820f8-f10f-46ed-be4f-72206e02a04c" />   
+
+The result shows only add an item on instance2, because the script only post to instance2 API. They do not share any data, such as database, there fore the change only applys on instance2.
