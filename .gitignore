@@ -2,6 +2,14 @@
 *.pem
 *.tfvars
 
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfout
+.terraform/
+.terraform.lock.hcl
+
 # Go build artifacts
 *.exe
 *.exe~
@@ -42,6 +50,11 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_output
 
 # IDE and editor files
 .vscode/
