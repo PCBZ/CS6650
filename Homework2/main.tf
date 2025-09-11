@@ -46,6 +46,13 @@ resource "aws_security_group" "ssh" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    description = "HTTP"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # latest Amazon Linux 2023 AMI
