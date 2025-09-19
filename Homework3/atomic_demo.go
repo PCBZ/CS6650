@@ -22,7 +22,7 @@ func atomic_increment() {
 
 	wg.Wait()
 
-	fmt.Println("ops:", ops.Load())
+	fmt.Println("atomic increament:", ops.Load())
 }
 
 func normal_increment() {
@@ -40,7 +40,7 @@ func normal_increment() {
 	}
 
 	wg.Wait()
-	fmt.Println("ops:", ops)
+	fmt.Println("normal increment:", ops)
 }
 
 func main() {
