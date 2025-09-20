@@ -9,7 +9,7 @@ The paper assumes perfect communication and doesn’t address what happens when 
 <img width="595" height="108" alt="image" src="https://github.com/user-attachments/assets/cab7039b-7e44-44e4-af4a-e114853fb788" />
 <img width="698" height="469" alt="image" src="https://github.com/user-attachments/assets/a232fade-0204-45f9-98c5-39c7980531a8" />
 
-The different results show that concurrent programming is dangerous without proper protection. Without proper application may result in unexpected result.
+The different results show that concurrent programming is dangerous without proper protection. Without proper application may result in unexpected result. `-race` helps us locate which lines generate data race.
 
 ### Collections
 <img width="702" height="186" alt="image" src="https://github.com/user-attachments/assets/fec52b47-5ad6-44e8-aba7-adf1aa287f63" />
@@ -19,7 +19,9 @@ Maps in Go are not safe for multiple goroutines to write at the same time.
 
 ### Mutex vs. RWMutex vs. SyncMap
 <img width="1400" height="800" alt="Performance-Comparison" src="https://github.com/user-attachments/assets/cdea8e0b-16c1-48e8-b921-ea41d592e9b8" />
-Mutex and RWMutex performances are similar. The task is more on write operation, while RWMutex take advantages on more read operation scenario. RWMutex will do better on read-heavy tasks.
+The figure compares 3 different ways to set value in hashmap data structures, experimenting with 100 times in each test group.
+
+**Mutex** and **RWMutex** performances are similar. The task is write-heavy, while RWMutex take advantages on more read operation scenario. RWMutex will do better on read-heavy tasks.
 
 ### File Access
 <img width="722" height="62" alt="image" src="https://github.com/user-attachments/assets/61ca5db1-c4b9-44e9-a144-a56e8640bb11" />
@@ -89,3 +91,4 @@ CPU usage is about 19%
 
 #### Discussion
 `FastHttpUser` can promote RPS performance, while do not increase on CPU usage. It is probably because the bottleneck is the network or server side limit.
+
