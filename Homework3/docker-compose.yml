@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  master:
+    image: locustio/locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --master -H http://ec2-34-220-158-77.us-west-2.compute.amazonaws.com:8080
+
+  worker:
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --worker --master-host master
+    depends_on:
+      - master
