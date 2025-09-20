@@ -35,7 +35,7 @@ func mapSafeWrite(mu sync.Locker) (time.Duration, int) {
 
 	start := time.Now()
 
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
@@ -62,7 +62,7 @@ func mapSyncMapWrite() (time.Duration, int) {
 
 	start := time.Now()
 
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
@@ -141,6 +141,5 @@ func runMultipleTimes(numRuns int) {
 
 func main() {
 	// mapWrite()
-	// mapSafeWrite()
 	runMultipleTimes(100)
 }
