@@ -26,6 +26,27 @@ type SplitResponse struct {
 }
 
 func (s *SplitterService) downloadFile(fileURL string) (io.ReadCloser, error) {
+	if strings.Contains(fileURL, "s3://") {
+		// Handle S3 URL
+		parts := strings.SplitN(fileURL[5:], "/", 2) // Remove "s3://" prefix
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid S3 URL format")
+		}
+
+		bucket := parts[0]
+		key := parts[1]
+
+		result, err := s.s3Client.GetObject(&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to download from S3: %v", err)
+		}
+
+		return result.Body, nil
+	}
+
 	response, err := http.Get(fileURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download from HTTPS: %v", err)

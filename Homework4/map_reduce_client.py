@@ -83,12 +83,17 @@ class MapReduceClient:
         loop = asyncio.get_event_loop()
         
         def blocking_request():
-            with urllib.request.urlopen(url) as response:
+            request = urllib.request.Request(url)
+            with urllib.request.urlopen(request, timeout=300) as response:
                 if response.status != 200:
                     raise Exception(f"HTTP request failed with status {response.status}")
                 return json.load(response)
         
-        return await loop.run_in_executor(None, blocking_request)
+        try:
+            return await loop.run_in_executor(None, blocking_request)
+        except Exception as e:
+            print(f"HTTP request failed for {url}: {e}")
+            raise
     
     def print_result(self, result: MapReduceResult):
         print(f"MapReduce Result: {result.message}")
