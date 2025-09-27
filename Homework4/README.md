@@ -36,39 +36,6 @@ The distributed MapReduce system consists of 3 main microservices and a manageme
 3. **Reducing:** The client calls the reducer service, which reads all mapper outputs from S3, aggregates word counts, and returns the final result.
 
 ### Workflow Figure
-```
-+-------------------+         +-------------------+         +-------------------+
-|   Management      |         |    Splitter       |         |     Mapper        |
-|     Client        |         |    Service        |         |    Service(s)     |
-+-------------------+         +-------------------+         +-------------------+
-        |                          |                             |
-        |  /split (input, N)       |                             |
-        +------------------------->|                             |
-        |                          |                             |
-        |                          |-- chunk_1 --> S3            |
-        |                          |-- chunk_2 --> S3            |
-        |                          |-- ...      --> S3           |
-        |                          |                             |
-        |<-------------------------+                             |
-        |   chunk info (urls)      |                             |
-        |                          |                             |
-        |  /map (chunk_1)          |                             |
-        +---------------------------------------------->         |
-        |  /map (chunk_2)          |                             |
-        +---------------------------------------------->         |
-        |  ...                     |                             |
-        |                          |                             |
-        |                          |-- result_1 --> S3           |
-        |                          |-- result_2 --> S3           |
-        |                          |-- ...      --> S3           |
-        |                          |                             |
-        |  /reduce                 |                             |
-        +------------------------------------------------------->|
-        |                          |                             |
-        |<-------------------------------------------------------+
-        |   final word count       |                             |
-        |                          |                             |
-```
 
 ### API Endpoints
 - `/split`: POST input file and chunk count, returns chunk info
@@ -85,4 +52,15 @@ I tested the performance of the MapReduce system using the given text file (164K
 <img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/704cf8bc-8481-4023-9d68-a1ceaf25b192" />
 <img width="1000" height="600" alt="20M_text_duration_compare" src="https://github.com/user-attachments/assets/7c3af04e-7797-4028-8b4f-4bda5492b2dd" />
 
+For the 164K text file, there are no deterministic performance improvements by increasing the number of mappers. This is likely because the bottleneck is not in the computation but in the overhead of managing multiple mappers and network I/O with S3.
 
+For the 20MB text file, increasing the number of mappers from 1 to 6 shows a clear performance improvement, reducing the total duration. Besides, the duration decreases more significantly when increasing mappers from 1 to 2, while the improvement from 3 to 6 mappers is less pronounced. This suggests diminishing returns as the number of mappers increases, likely due to overhead and resource contention.
+
+**What happen if one of the mapper failed? How would you recover?**
+Current system does not handle mapper failures, if 1 mapper fails, it will not proceed to the reduce phase. To recover, the client could implement retry logic or re-arrange the task to another available mapper.
+
+**How can you scale this system into 10 or 100 mappers?**
+It costs too much to use many ECS tasks. If we have more mappers, we can manage them using a queue system. The client can push chunk processing tasks into the queue, and mappers can pull tasks from the queue when they are available. This way, we can scale the number of mappers dynamically based on the workload.
+
+**What was the challenging part of coordinating tasks manually?**
+The most challenging part is lack of available ECS tasks status and capabilities. I can only assume any mapper can handle any chunk. This can lead to inefficiencies and potential bottlenecks if certain mappers are overloaded while others are underutilized. I encountered issues while testing with a 50MB file, as the ECS tasks were not sufficient to handle the load, leading to failures in processing all chunks.
