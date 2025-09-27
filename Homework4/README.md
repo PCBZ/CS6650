@@ -39,9 +39,9 @@ The distributed MapReduce system consists of 3 main microservices and a manageme
 sequenceDiagram
     participant Client
     participant Splitter
-    participant S3
     participant Mapper
     participant Reducer
+    participant S3
 
     Client->>Splitter: /split (input file, N)
     Splitter->>S3: Upload chunk_1
@@ -89,4 +89,5 @@ It costs too much to use many ECS tasks. If we have more mappers, we can manage 
 
 **What was the challenging part of coordinating tasks manually?**
 The most challenging part is lack of available ECS tasks status and capabilities. I can only assume any mapper can handle any chunk. This can lead to inefficiencies and potential bottlenecks if certain mappers are overloaded while others are underutilized. I encountered issues while testing with a 50MB file, as the ECS tasks were not sufficient to handle the load, leading to failures in processing all chunks.
+
 
