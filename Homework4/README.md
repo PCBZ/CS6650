@@ -82,3 +82,7 @@ The distributed MapReduce system consists of 3 main microservices and a manageme
 
 ### Performance Testing
 I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (20MB) and varied the number of mappers from 1 to 6. The results are as follows:
+<img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/704cf8bc-8481-4023-9d68-a1ceaf25b192" />
+<img width="1000" height="600" alt="20M_text_duration_compare" src="https://github.com/user-attachments/assets/7c3af04e-7797-4028-8b4f-4bda5492b2dd" />
+
+
