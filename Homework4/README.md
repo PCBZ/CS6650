@@ -22,3 +22,63 @@ TCP guarantees the packets to be sent to the receiver by 3-way handshaking, ACK,
 **However**, modern web applications are prone to use UDP by introducing QUIC to take advantages of TCP, such as HTTP/3.
 
 ## Part 3: Word Counting using MapReduce
+### System Architecture
+The distributed MapReduce system consists of 3 main microservices and a management client:
+
+- **Splitter Service (Go/Gin):** Splits the input file into N chunks and uploads them to S3. The service returns chunk file urls.
+- **Mapper Service (Go/Gin):** Processes each chunk from S3, counts word occurrences, and writes intermediate results back to S3. There are totally maximum 6 mappers running concurrently.
+- **Reducer Service (Go/Gin):** Aggregates all mapper outputs from S3, sums word counts, and produces the final result.
+- **Management Client (Python):** Coordinates the workflow by making async HTTP calls to splitter, mapper, and reducer endpoints, handling chunk distribution and result aggregation.
+
+### Workflow
+1. **Splitting:** The client sends a request to the splitter service with the input file and desired chunk count. The splitter uploads chunk files to S3.
+2. **Mapping:** The client triggers the mapper service for each chunk. Each mapper reads its chunk from S3, counts words, and writes results to S3.
+3. **Reducing:** The client calls the reducer service, which reads all mapper outputs from S3, aggregates word counts, and returns the final result.
+
+### Workflow Figure
+```
++-------------------+         +-------------------+         +-------------------+
+|   Management      |         |    Splitter       |         |     Mapper        |
+|     Client        |         |    Service        |         |    Service(s)     |
++-------------------+         +-------------------+         +-------------------+
+        |                          |                             |
+        |  /split (input, N)       |                             |
+        +------------------------->|                             |
+        |                          |                             |
+        |                          |-- chunk_1 --> S3            |
+        |                          |-- chunk_2 --> S3            |
+        |                          |-- ...      --> S3           |
+        |                          |                             |
+        |<-------------------------+                             |
+        |   chunk info (urls)      |                             |
+        |                          |                             |
+        |  /map (chunk_1)          |                             |
+        +---------------------------------------------->         |
+        |  /map (chunk_2)          |                             |
+        +---------------------------------------------->         |
+        |  ...                     |                             |
+        |                          |                             |
+        |                          |-- result_1 --> S3           |
+        |                          |-- result_2 --> S3           |
+        |                          |-- ...      --> S3           |
+        |                          |                             |
+        |  /reduce                 |                             |
+        +------------------------------------------------------->|
+        |                          |                             |
+        |<-------------------------------------------------------+
+        |   final word count       |                             |
+        |                          |                             |
+```
+
+### API Endpoints
+- `/split`: POST input file and chunk count, returns chunk info
+- `/map`: POST chunk ID, triggers word count for that chunk
+- `/reduce`: POST request, aggregates all mapper results
+
+### Infrastructure
+- **AWS ECR:** Stores Docker images for the services
+- **AWS ECS:** Hosts the splitter, mapper, and reducer services as containers
+- **AWS S3:** Stores input files, chunk files, and intermediate/final results
+
+### Performance Testing
+I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (20MB) and varied the number of mappers from 1 to 6. The results are as follows:
