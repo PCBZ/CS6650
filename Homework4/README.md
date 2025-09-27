@@ -35,7 +35,33 @@ The distributed MapReduce system consists of 3 main microservices and a manageme
 2. **Mapping:** The client triggers the mapper service for each chunk. Each mapper reads its chunk from S3, counts words, and writes results to S3.
 3. **Reducing:** The client calls the reducer service, which reads all mapper outputs from S3, aggregates word counts, and returns the final result.
 
-### Workflow Figure
+### Workflow Figure (Mermaid Sequence Diagram)
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Splitter
+    participant S3
+    participant Mapper
+    participant Reducer
+
+    Client->>Splitter: /split (input file, N)
+    Splitter->>S3: Upload chunk_1
+    Splitter->>S3: Upload chunk_2
+    Splitter->>S3: ...
+    Splitter-->>Client: Return chunk URLs
+
+    Client->>Mapper: /map (chunk_1)
+    Client->>Mapper: /map (chunk_2)
+    Client->>Mapper: ...
+    Mapper->>S3: Upload result_1
+    Mapper->>S3: Upload result_2
+    Mapper->>S3: ...
+
+    Client->>Reducer: /reduce
+    Reducer->>S3: Read all results
+    Reducer->>S3: Upload final result
+    Reducer-->>Client: Return final word count
+```
 
 ### API Endpoints
 - `/split`: POST input file and chunk count, returns chunk info
