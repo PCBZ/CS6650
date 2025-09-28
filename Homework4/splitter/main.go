@@ -29,9 +29,6 @@ func (s *SplitterService) downloadFile(fileURL string) (io.ReadCloser, error) {
 	if strings.Contains(fileURL, "s3://") {
 		// Handle S3 URL
 		parts := strings.SplitN(fileURL[5:], "/", 2) // Remove "s3://" prefix
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid S3 URL format")
-		}
 
 		bucket := parts[0]
 		key := parts[1]
@@ -43,20 +40,17 @@ func (s *SplitterService) downloadFile(fileURL string) (io.ReadCloser, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to download from S3: %v", err)
 		}
-
 		return result.Body, nil
 	}
-
+	// Handle HTTPS URL
 	response, err := http.Get(fileURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download from HTTPS: %v", err)
 	}
-
 	if response.StatusCode != http.StatusOK {
 		response.Body.Close()
 		return nil, fmt.Errorf("HTTPS request failed with status: %d", response.StatusCode)
 	}
-
 	return response.Body, nil
 }
 
@@ -76,12 +70,11 @@ func (s *SplitterService) splitHandler(c *gin.Context) {
 	fileURL := c.Query("url")
 	if fileURL == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Missing 'url' parameter",
+			"error": "Missing 'url' query parameter",
 		})
 		return
 	}
-
-	// Get the chunks parameter (default: 3)
+	// Get the number of chunks parameter
 	chunksStr := c.DefaultQuery("chunks", "3")
 	numChunks, err := strconv.Atoi(chunksStr)
 	if err != nil || numChunks < 1 {
@@ -91,7 +84,7 @@ func (s *SplitterService) splitHandler(c *gin.Context) {
 		return
 	}
 
-	// Download the file from HTTPS URL
+	// Download the file from URL
 	reader, err := s.downloadFile(fileURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -101,22 +94,31 @@ func (s *SplitterService) splitHandler(c *gin.Context) {
 	}
 	defer reader.Close()
 
-	// Read all lines from the file
-	var lines []string
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+	// Initialize chunk buffers, each string builder writes lines to its own chunk file
+	chunkBuffers := make([]*strings.Builder, numChunks)
+	for i := range chunkBuffers {
+		chunkBuffers[i] = &strings.Builder{}
 	}
 
+	scanner := bufio.NewScanner(reader)
+	lineIdx := 0
+	totalLines := 0
+	for scanner.Scan() {
+		// read each line
+		line := scanner.Text()
+		// according to line index, dispatch to different chunk buffer.
+		chunkIdx := lineIdx % numChunks // round-robin
+		chunkBuffers[chunkIdx].WriteString(line)
+		chunkBuffers[chunkIdx].WriteString("\n")
+		lineIdx++
+		totalLines++
+	}
 	if err := scanner.Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Error reading file: %v", err),
 		})
 		return
 	}
-
-	// Split lines into specified number of chunks
-	totalLines := len(lines)
 	if totalLines == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "File is empty",
@@ -124,49 +126,22 @@ func (s *SplitterService) splitHandler(c *gin.Context) {
 		return
 	}
 
-	// Calculate chunk sizes
-	chunkSize := totalLines / numChunks
-	remainder := totalLines % numChunks
-
-	var chunks [][]string
-	start := 0
-
-	for i := 0; i < numChunks; i++ {
-		end := start + chunkSize
-		if i < remainder {
-			end++ // Distribute remainder lines to first chunks
-		}
-
-		if end > totalLines {
-			end = totalLines
-		}
-
-		// Skip empty chunks
-		if start < end {
-			chunks = append(chunks, lines[start:end])
-		}
-		start = end
-	}
-
 	// Upload chunks to S3 and collect URLs
 	var chunkURLs []string
-	for i, chunk := range chunks {
-		chunkContent := strings.Join(chunk, "\n")
+	for i, buf := range chunkBuffers {
+		chunkContent := buf.String()
 		chunkKey := fmt.Sprintf("chunks/chunk_%d.txt", i+1)
-
 		_, err := s.s3Client.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(s.bucket),
 			Key:    aws.String(chunkKey),
 			Body:   strings.NewReader(chunkContent),
 		})
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": fmt.Sprintf("Failed to upload chunk %d: %v", i+1, err),
 			})
 			return
 		}
-
 		chunkURL := fmt.Sprintf("s3://%s/%s", s.bucket, chunkKey)
 		chunkURLs = append(chunkURLs, chunkURL)
 	}
@@ -174,17 +149,10 @@ func (s *SplitterService) splitHandler(c *gin.Context) {
 	// Return the chunk URLs
 	response := SplitResponse{
 		ChunkURLs: chunkURLs,
-		Message:   fmt.Sprintf("Successfully split file into %d chunks with %d total lines", len(chunks), totalLines),
+		Message:   fmt.Sprintf("Successfully split file into %d chunks with %d total lines", len(chunkBuffers), totalLines),
 	}
 
 	c.JSON(http.StatusOK, response)
-}
-
-func (s *SplitterService) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "healthy",
-		"service": "splitter",
-	})
 }
 
 func main() {
