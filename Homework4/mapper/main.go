@@ -37,12 +37,10 @@ type WordCountResult struct {
 
 // downloads a file from S3 given an S3 URL
 func (m *MapperService) downloadFromS3(s3URL string) (io.ReadCloser, error) {
-	// Parse S3 URL format: s3://bucket/key
 	parts := strings.SplitN(s3URL[5:], "/", 2) // Remove "s3://" prefix
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid S3 URL format")
 	}
-
 	bucket := parts[0]
 	key := parts[1]
 
@@ -98,30 +96,27 @@ func (m *MapperService) mapHandler(c *gin.Context) {
 	}
 	defer reader.Close()
 
-	// Read all text content from the chunk
-	var textBuilder strings.Builder
+	// Count word frequencies line by line
+	wordCount := make(map[string]int)
+	re := regexp.MustCompile(`[a-zA-Z0-9']+`)
 	scanner := bufio.NewScanner(reader)
+	totalWords := 0
 	for scanner.Scan() {
-		textBuilder.WriteString(scanner.Text())
-		textBuilder.WriteString("\n") // Add newline between lines
+		line := scanner.Text()
+		words := re.FindAllString(line, -1)
+		for _, word := range words {
+			word = strings.ToLower(strings.Trim(word, "'"))
+			if word != "" {
+				wordCount[word]++
+				totalWords++
+			}
+		}
 	}
-
 	if err := scanner.Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Error reading chunk: %v", err),
 		})
 		return
-	}
-
-	text := textBuilder.String()
-
-	// Count word frequencies
-	wordCount := m.countText(text)
-
-	// Calculate total word count
-	totalWords := 0
-	for _, count := range wordCount {
-		totalWords += count
 	}
 
 	// Prepare result structure
