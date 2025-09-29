@@ -103,5 +103,10 @@ It costs too much to use many ECS tasks. If we have more mappers, we can manage 
 **What was the challenging part of coordinating tasks manually?**  
 The most challenging part is lack of available ECS tasks status and capabilities. I can only assume any mapper can handle any chunk. This can lead to inefficiencies and potential bottlenecks if certain mappers are overloaded while others are underutilized. I encountered issues while testing with a 50MB file, as the ECS tasks were not sufficient to handle the load, leading to failures in processing all chunks.
 
+### Orchestration Notes
+- In `map_reduce_tester.py`, before each MapReduce task:
+  - The tester fetches available ECS tasks and retrieves their IP addresses.
+  - Previous intermediate files in S3 are cleared to ensure a clean run.
+
 
 
