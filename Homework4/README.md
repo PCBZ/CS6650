@@ -73,11 +73,13 @@ sequenceDiagram
 - **AWS S3:** Stores input files, chunk files, and intermediate/final results
 
 ### Service Resource Allocation
-| Service   | Count | vCPU per Instance | Memory per Instance |
-|-----------|-------|-------------------|--------------------|
-| Splitter  | 1     | 0.25              | 0.5 GB             |
-| Mapper    | 6     | 0.25              | 0.5 GB             |
-| Reducer   | 1     | 0.25              | 0.5 GB             |
+| Service   | Count | vCPU per Container | Memory per Container |
+|-----------|-------|--------------------|---------------------|
+| Splitter  | 1     | 0.25               | 0.5 GB              |
+| Mapper    | 6     | 0.25               | 0.5 GB              |
+| Reducer   | 1     | 0.25               | 0.5 GB              |
+
+*Each node is a Docker container running on AWS ECS.*
 
 ### Performance Testing
 I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (50MB) and varied the number of mappers from 1 to 6. The results are as follows:
