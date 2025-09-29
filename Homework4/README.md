@@ -74,8 +74,9 @@ sequenceDiagram
 
 ### Performance Testing
 I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (50MB) and varied the number of mappers from 1 to 6. The results are as follows:
-<img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/704cf8bc-8481-4023-9d68-a1ceaf25b192" />
-<img width="1000" height="600" alt="20M_text_duration_compare" src="https://github.com/user-attachments/assets/7c3af04e-7797-4028-8b4f-4bda5492b2dd" />
+<img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/bc72a762-48c8-417c-9c08-a557b5fa2d1a" />
+<img width="1000" height="600" alt="50M_text_duration_compare" src="https://github.com/user-attachments/assets/00834cf4-ba21-41f5-863f-74e64e77f2d0" />
+
 
 For the 164K text file, there are no deterministic performance improvements by increasing the number of mappers. This is likely because the bottleneck is not in the computation but in the overhead of managing multiple mappers and network I/O with S3.
 
@@ -92,5 +93,6 @@ It costs too much to use many ECS tasks. If we have more mappers, we can manage 
 
 **What was the challenging part of coordinating tasks manually?**
 The most challenging part is lack of available ECS tasks status and capabilities. I can only assume any mapper can handle any chunk. This can lead to inefficiencies and potential bottlenecks if certain mappers are overloaded while others are underutilized. I encountered issues while testing with a 50MB file, as the ECS tasks were not sufficient to handle the load, leading to failures in processing all chunks.
+
 
 
