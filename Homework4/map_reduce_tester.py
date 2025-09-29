@@ -70,7 +70,7 @@ class MapReducePerformanceTester:
         plt.plot(mapper_counts, durations, 'b-o', linewidth=2, markersize=8)
         plt.xlabel('Number of Mappers')
         plt.ylabel('Duration (seconds)')
-        plt.title('MapReduce Duration vs Mapper Count (20M)')
+        plt.title('MapReduce Duration vs Mapper Count (164K)')
         plt.grid(True, alpha=0.3)
         
         plt.show()
@@ -78,12 +78,13 @@ class MapReducePerformanceTester:
 
 async def main():
     # file_url= "https://www.gutenberg.org/files/100/100-0.txt"
-    file_url = "s3://mapreduce-experiment-975050147762/20MB-file.txt"
+    # file_url = "s3://mapreduce-experiment-975050147762/20MB-file.txt"
+    # file_url = "s3://mapreduce-experiment-975050147762/50MB-TXT-FILE.txt"
     # file_url = "https://mapreduce-experiment-975050147762.s3.us-west-2.amazonaws.com/50MB-TXT-FILE.txt"
     # file_url = "https://drive.google.com/file/d/1XvQpU2U4QDBGt__uwsksI3gbpEOns-PX/view?usp=drive_lin"
     
     # file_url = "https://www.sampledocs.in/DownloadFiles/SampleFile?filename=sample_file_50mb_sampledocs&ext=txt"
-    # file_url = "https://raw.githubusercontent.com/teropa/nlp/master/resources/corpora/gutenberg/shakespeare-hamlet.txt"
+    file_url = "https://raw.githubusercontent.com/teropa/nlp/master/resources/corpora/gutenberg/shakespeare-hamlet.txt"
     mapper_counts = [1, 2, 3, 4, 5, 6]
     
     tester = MapReducePerformanceTester()

@@ -73,13 +73,16 @@ sequenceDiagram
 - **AWS S3:** Stores input files, chunk files, and intermediate/final results
 
 ### Performance Testing
-I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (20MB) and varied the number of mappers from 1 to 6. The results are as follows:
+I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (50MB) and varied the number of mappers from 1 to 6. The results are as follows:
 <img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/704cf8bc-8481-4023-9d68-a1ceaf25b192" />
 <img width="1000" height="600" alt="20M_text_duration_compare" src="https://github.com/user-attachments/assets/7c3af04e-7797-4028-8b4f-4bda5492b2dd" />
 
 For the 164K text file, there are no deterministic performance improvements by increasing the number of mappers. This is likely because the bottleneck is not in the computation but in the overhead of managing multiple mappers and network I/O with S3.
 
-For the 20MB text file, increasing the number of mappers from 1 to 6 shows a clear performance improvement, reducing the total duration. Besides, the duration decreases more significantly when increasing mappers from 1 to 2, while the improvement from 3 to 6 mappers is less pronounced. This suggests diminishing returns as the number of mappers increases, likely due to overhead and resource contention.
+For the 50MB text file, 
+1. increasing the number of mappers from 1 to 6 shows a clear performance improvement, reducing the total duration. 
+2. Most significant improvement occurs between 1-2 mappers (42% reduction).
+3. Performance gains flatten after 4 mappers, indicating efficiency bottlenecks.
 
 **What happen if one of the mapper failed? How would you recover?**
 Current system does not handle mapper failures, if 1 mapper fails, it will not proceed to the reduce phase. To recover, the client could implement retry logic or re-arrange the task to another available mapper.
