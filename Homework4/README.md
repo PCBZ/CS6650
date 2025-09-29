@@ -72,6 +72,13 @@ sequenceDiagram
 - **AWS ECS:** Hosts the splitter, mapper, and reducer services as containers
 - **AWS S3:** Stores input files, chunk files, and intermediate/final results
 
+### Service Resource Allocation
+| Service   | Count | vCPU per Instance | Memory per Instance |
+|-----------|-------|-------------------|--------------------|
+| Splitter  | 1     | 0.25              | 0.5 GB             |
+| Mapper    | 6     | 0.25              | 0.5 GB             |
+| Reducer   | 1     | 0.25              | 0.5 GB             |
+
 ### Performance Testing
 I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (50MB) and varied the number of mappers from 1 to 6. The results are as follows:
 <img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/bc72a762-48c8-417c-9c08-a557b5fa2d1a" />
@@ -85,13 +92,13 @@ For the 50MB text file,
 2. Most significant improvement occurs between 1-2 mappers (42% reduction).
 3. Performance gains flatten after 4 mappers, indicating efficiency bottlenecks.
 
-**What happen if one of the mapper failed? How would you recover?**
+**What happen if one of the mapper failed? How would you recover?**  
 Current system does not handle mapper failures, if 1 mapper fails, it will not proceed to the reduce phase. To recover, the client could implement retry logic or re-arrange the task to another available mapper.
 
-**How can you scale this system into 10 or 100 mappers?**
+**How can you scale this system into 10 or 100 mappers?**    
 It costs too much to use many ECS tasks. If we have more mappers, we can manage them using a queue system. The client can push chunk processing tasks into the queue, and mappers can pull tasks from the queue when they are available. This way, we can scale the number of mappers dynamically based on the workload.
 
-**What was the challenging part of coordinating tasks manually?**
+**What was the challenging part of coordinating tasks manually?**  
 The most challenging part is lack of available ECS tasks status and capabilities. I can only assume any mapper can handle any chunk. This can lead to inefficiencies and potential bottlenecks if certain mappers are overloaded while others are underutilized. I encountered issues while testing with a 50MB file, as the ECS tasks were not sufficient to handle the load, leading to failures in processing all chunks.
 
 
