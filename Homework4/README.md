@@ -81,6 +81,9 @@ sequenceDiagram
 
 *Each node is a Docker container running on AWS ECS.*
 
+<img width="1194" height="633" alt="image" src="https://github.com/user-attachments/assets/6a35e7db-7acc-4c8f-a6c9-f26bcd745b49" />
+
+
 ### Performance Testing
 I tested the performance of the MapReduce system using the given text file (164K) and a larger text file (50MB) and varied the number of mappers from 1 to 6. The results are as follows:
 <img width="1000" height="600" alt="164K_text_duration_compare" src="https://github.com/user-attachments/assets/bc72a762-48c8-417c-9c08-a557b5fa2d1a" />
@@ -107,6 +110,7 @@ The most challenging part is lack of available ECS tasks status and capabilities
 - In `map_reduce_tester.py`, before each MapReduce task:
   - The tester fetches available ECS tasks and retrieves their IP addresses.
   - Previous intermediate files in S3 are cleared to ensure a clean run.
+
 
 
 
