@@ -1,5 +1,0 @@
-# Homework 5
-## Part 1: Reading
-The CPA theorem is most informative for me. It completely changed my perspective that there is no perfect distributed system can satisfiy **Consistency**, **Availability**, and **Partition tolerance**. Each distributed system has to make trade-offs among these 3 properties based on its use cases.
-
-I'd actually encountered this concept in practice before, but didn't understand the theory behind it. We had a master-slave database store "likes" for each story in a social media feeds where users would occasionally see outdated "likes" count when reading from slave while writing to master. The replication lag wasn't a bug - it was the inevitable consequence of our architectural choice to keep read services available even during network issues. This experience makes CAP theorem much more concrete and meaningful to me.
