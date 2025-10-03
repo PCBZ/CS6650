@@ -56,24 +56,72 @@ curl -X POST http://localhost:8080/v1/products/1/details \
 
 ### How to Run
 
-1. **Start the service:**
-```bash
-go run .
-```
+#### Local Development Setup
 
-2. **Or with Docker:**
-```bash
-docker build -t product-api .
-docker run -p 8080:8080 product-api
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/PCBZ/CS6650
+   cd Homework5/src
+   ```
+2. **Install dependencies**
+   ```bash
+   go mod download
+   ```
+3. **Direct go run**
+   ```bash
+   go run .
+   ```
+4. **Or Run with Docker**
+   ```bash
+   docker build -t product-api .
+   docker run -p 8080:8080 product-api
+   ```
+
+#### AWS Deployment
+
+1. **Setup credential**
+   ```bash
+   aws configure
+   ```
+   fill up the credential information
+
+2. **Navigate to terraform path**
+   ```bash
+   cd terraform
+   ```
+
+3. **Terraform initialization**
+   ```bash
+   terraform init
+   ```
+
+4. **Terraform deployment**
+   ```bash
+   terraform apply
+   ```
+
+### Load Testing
+<img width="1452" height="725" alt="image" src="https://github.com/user-attachments/assets/c045f93f-e777-4966-a4c9-788118795feb" />
+
+<img width="1474" height="742" alt="image" src="https://github.com/user-attachments/assets/5df37a3f-9b49-4715-89b3-c7081774f232" />
+
 
 ### Usage Example
-```bash
-# Create a product
-curl -X POST http://localhost:8080/v1/products/1/details \
-  -H "Content-Type: application/json" \
-  -d '{"productId": 1, "sku": "TEST-001", "manufacturer": "TestCorp"}'
+#### Get a product
+##### Get sucessfully (200)
+<img width="1070" height="470" alt="image" src="https://github.com/user-attachments/assets/49559e31-dfee-4363-b2cc-11a3e4c8d9f5" />
 
-# Get the product
-curl http://localhost:8080/v1/products/1
-```
+##### Get failed with item not found (404)
+<img width="1065" height="452" alt="image" src="https://github.com/user-attachments/assets/e4d343a4-225b-4bf5-be0c-8672c3004ada" />
+
+##### Get failed with invalid parameters (400)
+<img width="1086" height="490" alt="image" src="https://github.com/user-attachments/assets/1d284af8-f1a8-43f4-8b65-fe83317f0f56" />
+
+
+#### Create a product
+##### Create sucessfully (204)
+<img width="1065" height="427" alt="image" src="https://github.com/user-attachments/assets/2a2a7b61-edbe-4ac6-9224-aae3d50c07d6" />
+
+##### Create failed with invalid parameters (400)
+<img width="1070" height="470" alt="image" src="https://github.com/user-attachments/assets/4e7d78af-be0e-4cec-acca-6b3547f72f0f" />
+
