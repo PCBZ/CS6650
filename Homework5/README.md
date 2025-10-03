@@ -100,6 +100,12 @@ curl -X POST http://localhost:8080/v1/products/1/details \
    terraform apply
    ```
 
+### Load Testing
+<img width="1452" height="725" alt="image" src="https://github.com/user-attachments/assets/c045f93f-e777-4966-a4c9-788118795feb" />
+
+<img width="1474" height="742" alt="image" src="https://github.com/user-attachments/assets/5df37a3f-9b49-4715-89b3-c7081774f232" />
+
+
 ### Usage Example
 #### Get a product
 ##### Get sucessfully (200)
@@ -119,10 +125,3 @@ curl -X POST http://localhost:8080/v1/products/1/details \
 ##### Create failed with invalid parameters (400)
 <img width="1070" height="470" alt="image" src="https://github.com/user-attachments/assets/4e7d78af-be0e-4cec-acca-6b3547f72f0f" />
 
-##### Create failed with
-
-
-
-# Get the product
-curl http://localhost:8080/v1/products/1
-```
