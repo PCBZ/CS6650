@@ -22,7 +22,20 @@ variable "container_port" {
 
 variable "ecs_count" {
   type    = number
-  default = 2
+  default = 1  # Changed from 2 to 1 instance
+}
+
+# CPU and Memory settings for Fargate
+variable "cpu" {
+  type        = string
+  default     = "256"  # 256 CPU units (0.25 vCPU)
+  description = "vCPU units for Fargate task"
+}
+
+variable "memory" {
+  type        = string
+  default     = "512"  # 512 MB
+  description = "Memory (MiB) for Fargate task"
 }
 
 # How long to keep logs

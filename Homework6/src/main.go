@@ -6,6 +6,15 @@ import "fmt"
 var productStore = NewProductStore()
 
 func main() {
+	// Generate sample data
+	dataGen := NewDataGenerator()
+	products := dataGen.GenerateProducts()
+
+	// Store the generated products
+	for _, product := range products {
+		productStore.SetProduct(product.ProductID, product)
+	}
+
 	router := SetupRouter()
 
 	// Start server on port 8080
