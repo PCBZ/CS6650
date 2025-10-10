@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -132,6 +133,9 @@ func (api *ProductAPI) SearchProducts(c *gin.Context) {
 
 	// Calculate search time
 	searchTime := time.Since(startTime).Round(time.Millisecond)
+
+	log.Printf("✅ Search completed: query='%s' | checked=%d/%d | found=%d | returned=%d | time=%v",
+		query, productsChecked, maxToCheck, totalFound, len(matches), searchTime)
 
 	response := SearchResponse{
 		Products:   matches,

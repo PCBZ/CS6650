@@ -43,6 +43,11 @@ module "ecs" {
 resource "docker_image" "app" {
   # Use the URL from the ecr module, and tag it "latest"
   name = "${module.ecr.repository_url}:latest"
+  
+  # Force rebuild on every apply by using a timestamp trigger
+  triggers = {
+    build_time = timestamp()
+  }
 
   build {
     # relative path from terraform/ → src/

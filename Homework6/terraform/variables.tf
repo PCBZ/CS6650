@@ -22,7 +22,7 @@ variable "container_port" {
 
 variable "ecs_count" {
   type    = number
-  default = 1  # Changed from 2 to 1 instance
+  default = 2
 }
 
 # CPU and Memory settings for Fargate
