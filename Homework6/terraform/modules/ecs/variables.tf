@@ -8,6 +8,12 @@ variable "image" {
   description = "ECR image URI (with tag)"
 }
 
+variable "image_digest" {
+  type        = string
+  description = "Docker image digest to force redeployment"
+  default     = ""
+}
+
 variable "container_port" {
   type        = number
   description = "Port your app listens on"
@@ -59,4 +65,34 @@ variable "memory" {
   type        = string
   default     = "512"
   description = "Memory (MiB)"
+}
+
+variable "target_group_arn" {
+  type        = string
+  description = "ALB Target Group ARN"
+  default     = null
+}
+
+variable "enable_autoscaling" {
+  type        = bool
+  description = "Enable auto scaling for ECS service"
+  default     = true
+}
+
+variable "min_capacity" {
+  type        = number
+  description = "Minimum number of ECS tasks"
+  default     = 2
+}
+
+variable "max_capacity" {
+  type        = number
+  description = "Maximum number of ECS tasks"
+  default     = 4
+}
+
+variable "target_cpu_utilization" {
+  type        = number
+  description = "Target CPU utilization percentage"
+  default     = 70
 }

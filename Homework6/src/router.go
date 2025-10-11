@@ -11,6 +11,14 @@ func SetupRouter() *gin.Engine {
 
 	router := gin.New()
 
+	// Health check endpoint for ALB
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "healthy",
+			"service": "product-api",
+		})
+	})
+
 	// Setup API v1 routes
 	setupV1Routes(router)
 

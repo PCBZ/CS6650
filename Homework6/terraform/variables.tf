@@ -38,6 +38,31 @@ variable "memory" {
   description = "Memory (MiB) for Fargate task"
 }
 
+# Auto Scaling settings
+variable "min_capacity" {
+  type        = number
+  default     = 2
+  description = "Minimum number of ECS tasks"
+}
+
+variable "max_capacity" {
+  type        = number
+  default     = 4
+  description = "Maximum number of ECS tasks"
+}
+
+variable "target_cpu_utilization" {
+  type        = number
+  default     = 70
+  description = "Target CPU utilization percentage for auto scaling"
+}
+
+variable "health_check_path" {
+  type        = string
+  default     = "/health"
+  description = "Health check path for ALB"
+}
+
 # How long to keep logs
 variable "log_retention_days" {
   type    = number
