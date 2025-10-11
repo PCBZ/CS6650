@@ -146,9 +146,13 @@ The system had self-healing mechanism, auto detecting "unhealthy", then created 
 ### 90 default CPU utilization
 <img width="1162" height="635" alt="image" src="https://github.com/user-attachments/assets/bb79900d-f58d-4786-8982-03a0110ced00" />
 <img width="2928" height="1800" alt="total_requests_per_second_1760160011 663" src="https://github.com/user-attachments/assets/16605e56-9ed8-4f24-8401-c62f29d407ec" />
+### 50 default CPU utilization
+<img width="1161" height="655" alt="image" src="https://github.com/user-attachments/assets/764fd7b5-d6d9-43cb-be9a-a36c104c14bc" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760164237 933" src="https://github.com/user-attachments/assets/93a7d698-01a8-4e3e-a9ca-f147bbbab5ac" />
 
 | Description | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
 |-------------|------------|---------------|------------------|-----|------------------------|------------------------|
 | 90 CPU      | 3          | 100           | 18               | 30  | 150                    | 980                    |
+| 50 CPU      | 6          | 50            | 11               | 35  | 41                     | 200                    |
 
 
