@@ -34,16 +34,22 @@ Increase CPU allocation from 256 → 512 CPU units to handle higher load.
 ### Architecture with ALB
 ```mermaid
 graph TD
-    A[Client] --> B[Load Balancer]
-    B --> C[ECS Task 1]
-    B --> D[ECS Task 2]
-    B --> E[ECS Task 3]
-    B --> F[ECS Task 4]
+    A[Client] --> B[ALB]
+    B --> C[Target Group]
+    C --> D[ECS Task]
+    C --> E[ECS Task]
+    C --> F[ECS Task]
+    C --> G[ECS Task]
     
-    G[Auto Scaling] --> C
-    G --> D
-    G --> E
-    G --> F
+    H[Auto Scaling]
+    H -.-> D
+    H -.-> E
+    H -.-> F
+    H -.-> G
+    
+    style B fill:#ff9999
+    style C fill:#99ff99
+    style H fill:#99ccff
 ```
 
 ### Core Functions
@@ -139,7 +145,7 @@ CPU and memory utilization are **3%** and **6%**, respectively, with **2** runni
 <img width="1178" height="331" alt="image" src="https://github.com/user-attachments/assets/d5c3f817-f1ac-40f7-bd4d-8da1f702341d" />
 <img width="1157" height="252" alt="image" src="https://github.com/user-attachments/assets/fb4e96e8-c113-4155-8781-c0328cb41b69" />
 <img width="1164" height="279" alt="image" src="https://github.com/user-attachments/assets/6ca39f63-46ee-4986-a65b-095172921ed3" />
-
+### Key Observation
 The system had self-healing mechanism, auto detecting "unhealthy", then created a new task, maintaining healthy status.
 
 ## Exploration
@@ -155,4 +161,31 @@ The system had self-healing mechanism, auto detecting "unhealthy", then created 
 | 90 CPU      | 3          | 100           | 18               | 30  | 150                    | 980                    |
 | 50 CPU      | 6          | 50            | 11               | 35  | 41                     | 200                    |
 
+## Result:
+### How the system solved your Part II bottleneck
+**Part II bottleneck**
+- **Resource exhaustion**: CPU/memory limits on single instance
+- **No fault tolerance**: Instance failure = whole service down
+- **No load distribution**: Single point handles all concurrent requests
 
+**Part III Solution**
+- **Redundancy**  
+Load balancer provides multiple paths to service
+- **Load Distribution**  
+ALB distributes requests across healthy instances preventing any single instance from becoming bottleneck
+- **Elastic Scaling**  
+Auto Scaling automatically adds capacity when needed
+CPU-based scaling prevents problems from overload such as increasing request latency
+- **Fault Isolation**  
+Individual instance failures don't cascade to system failure
+Failed instances automatically replaced without manual intervention
+
+### The role of each component
+**ALB**: Traffic dispatcher
+**Target Group**: Instance manager and health monitor
+**Auto Scaling**: Monitor performance and manage instance
+
+### Advantages of Horizontal scalling
+1. **Fault Tolerance**
+2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
+3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
