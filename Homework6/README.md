@@ -30,4 +30,125 @@ With load increasing, both CPU and memory utilization increase.
  
 Increase CPU allocation from 256 → 512 CPU units to handle higher load.
 
+## Horizontal Scaling Infrastructure
+### Architecture with ALB
+```mermaid
+graph TD
+    A[Client] --> B[Load Balancer]
+    B --> C[ECS Task 1]
+    B --> D[ECS Task 2]
+    B --> E[ECS Task 3]
+    B --> F[ECS Task 4]
+    
+    G[Auto Scaling] --> C
+    G --> D
+    G --> E
+    G --> F
+```
+
+### Core Functions
+#### ALB
+```tf
+resource "aws_lb" "this" {
+  name               = "${var.service_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+
+resource "aws_lb_target_group" "this" {
+  ***
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = var.health_check_path
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 2
+  }
+```
+
+### Auto Scaling
+```tf
+variable "min_capacity" {
+  type        = number
+  default     = 2
+  description = "Minimum number of ECS tasks"
+}
+
+variable "max_capacity" {
+  type        = number
+  default     = 4
+  description = "Maximum number of ECS tasks"
+}
+
+variable "target_cpu_utilization" {
+  type        = number
+  default     = 70
+  description = "Target CPU utilization percentage for auto scaling"
+}
+
+variable "health_check_path" {
+  type        = string
+  default     = "/health"
+  description = "Health check path for ALB"
+}
+```
+
+### Initial Service Status
+<img width="1175" height="487" alt="image" src="https://github.com/user-attachments/assets/671996fc-efea-440e-bb0e-ff52ab55cf5f" />
+CPU and memory utilization are **3%** and **6%**, respectively, with **2** running tasks.
+
+### Applying 20 users
+<img width="1158" height="447" alt="image" src="https://github.com/user-attachments/assets/d7d1d323-441d-4bd5-b1dd-7e66c2e786eb" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760145494 089" src="https://github.com/user-attachments/assets/9bf0abe4-4c8e-4f91-bce0-e167b9135bc5" />
+
+### Upgrading to 40 users
+<img width="1180" height="476" alt="image" src="https://github.com/user-attachments/assets/7147df18-f416-4faa-a3f4-4ce20d4ccb08" />
+<img width="1180" height="476" alt="image" src="https://github.com/user-attachments/assets/5adce82d-b237-4810-aa7c-b3b869272928" />
+
+### Upgrading to 60 users
+<img width="1175" height="478" alt="image" src="https://github.com/user-attachments/assets/3d84ce33-0d06-498a-975d-297d2314d9d0" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760151647 776" src="https://github.com/user-attachments/assets/1a6b673a-bc19-41de-872e-c84b1a872cc6" />
+
+### Upgrading to 80 users
+<img width="1182" height="485" alt="image" src="https://github.com/user-attachments/assets/cbb8e809-1dde-49eb-b9a8-61a0e55dbd28" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760154283 864" src="https://github.com/user-attachments/assets/3ed3351d-0fcc-421c-aa19-0f6789f6c8ce" />
+
+
+#### Performance Test Results Comparison
+| Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
+|-------|------------|---------------|------------------|-----|------------------------|------------------------|
+| 0     | 2          | 3             | 6                | N/A | N/A                    | N/A                    |
+| 20    | 2          | 40            | 10               | 9   | 40                     | 200                    |
+| 40    | 2          | 70            | 14               | 17  | 70                     | 440                    |
+| 60    | 3          | 80            | 15               | 25  | 55                     | 430                    |
+| 80    | 4          | 75            | 18               | 34  | 47                     | 340                    |
+
+### Key Observations
+**Auto-Scaling is Responsive**  
+- CPU-based scaling (70% threshold) triggers appropriately
+- New instances come online before system failure
+- Load rebalancing happens automatically
+**Performance Improves with Scale**
+- 95th percentile response times improve: 440ms → 430ms → 340ms
+- This demonstrates the power of distributing load across multiple instances
+
+## Resilience Test
+<img width="1178" height="331" alt="image" src="https://github.com/user-attachments/assets/d5c3f817-f1ac-40f7-bd4d-8da1f702341d" />
+<img width="1157" height="252" alt="image" src="https://github.com/user-attachments/assets/fb4e96e8-c113-4155-8781-c0328cb41b69" />
+<img width="1164" height="279" alt="image" src="https://github.com/user-attachments/assets/6ca39f63-46ee-4986-a65b-095172921ed3" />
+
+The system had self-healing mechanism, auto detecting "unhealthy", then created a new task, maintaining healthy status.
+
+## Exploration
+### 90 default CPU utilization
+<img width="1162" height="635" alt="image" src="https://github.com/user-attachments/assets/bb79900d-f58d-4786-8982-03a0110ced00" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760160011 663" src="https://github.com/user-attachments/assets/16605e56-9ed8-4f24-8401-c62f29d407ec" />
+
+| Description | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
+|-------------|------------|---------------|------------------|-----|------------------------|------------------------|
+| 90 CPU      | 3          | 100           | 18               | 30  | 150                    | 980                    |
+
 
