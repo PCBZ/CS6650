@@ -47,13 +47,13 @@ variable "min_capacity" {
 
 variable "max_capacity" {
   type        = number
-  default     = 4
+  default     = 8
   description = "Maximum number of ECS tasks"
 }
 
 variable "target_cpu_utilization" {
   type        = number
-  default     = 70
+  default     = 50
   description = "Target CPU utilization percentage for auto scaling"
 }
 
