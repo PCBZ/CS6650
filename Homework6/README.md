@@ -1,12 +1,5 @@
 # Homework 6
-## Reading
-### What I like
-The criteria mentioned can be mapped to the SOLID principles of OOP design: “Information Hidden” -> Encapsulation, “characterized by its knowledge of a design decision which it hides from all others”
--> Single Responsiblity, "Abstract Interfaces" -> Dependency Inversion, "Hierarchical Structure" -> Open/Closed Principle, "Design Decision Isolation" -> Interface Segregation.
-
-It describes the theoretical foundation of microservices architecture. “information hiding” principle maps directly to how microservices encapsulate their data stores and business logic behind API boundaries. Abstract interfaces like are essentially REST/gRPC APIs that provide service contracts without exposing implementation details. The changeability analysis showing how modifications stay isolated to single modules - you can change one service without affecting other services. His emphasis on independent development through abstract interfaces directly enables the DevOps model where different teams can develop, deploy, and scale their services autonomously.
-
-## Search API performance
+## Search API single node performance
 ### Baseline 5 users - 2 min
 <img width="2928" height="1800" alt="total_requests_per_second_1759955371 654" src="https://github.com/user-attachments/assets/d900045a-97df-49a4-a3b1-05969ea16978" />
 
@@ -18,17 +11,29 @@ It describes the theoretical foundation of microservices architecture. “inform
 <img width="1141" height="356" alt="image" src="https://github.com/user-attachments/assets/1f385f69-6d8b-402b-b132-6fbad4a4e885" />
 
 With load increasing, both CPU and memory utilization increase.
-| Metric | 5 Users | 20 Users | Change |
-|--------|---------|----------|---------|
-| **CPU Utilization** | 20% | 80% | +60% ⬆️ |
-| **Memory Utilization** | 10% | 11% | +1% ➡️ |
+| Metric | 5 Users | 20 Users |
+|--------|---------|----------|
+| **CPU Utilization** | 20% | 80% |
+| **Memory Utilization** | 10% | 11% |
+| 50% response time (ms) | 40 | 150 |
+| 95% response time (ms) | 150 | 600 |
 
-**Evidence for Hardware Scaling (not Code Optimization):**
-- Fixed computation workload (exactly 100 product checks per search)
+**Key Observations:**
 - Memory usage remains stable
 - CPU becomes the primary bottleneck
  
 Increase CPU allocation from 256 → 512 CPU units to handle higher load.
+<img width="1180" height="485" alt="image" src="https://github.com/user-attachments/assets/96bb816b-8574-4d96-8216-e0a195e54fac" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760236394 877" src="https://github.com/user-attachments/assets/c8d51991-6675-4d4e-b86e-89fb8eedc632" />
+
+Switching to 512v CPU and 1G memory and keeping test with 20 users:
+| Metric (20 users) | 256v CPU | 512v CPU |
+|--------|---------| -------- |
+| **CPU Utilization** | 80% | 40% |
+| 50% response time (ms) | 150 | 45 |
+| 95% response time (ms) | 600 | 130 |
+To some extend, scalling up can address the bottleneck limit problem.
+
 
 ## Horizontal Scaling Infrastructure
 ### Architecture with ALB
@@ -203,4 +208,5 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
