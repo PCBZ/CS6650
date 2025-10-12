@@ -110,6 +110,7 @@ variable "health_check_path" {
 
 ### Initial Service Status
 <img width="1175" height="487" alt="image" src="https://github.com/user-attachments/assets/671996fc-efea-440e-bb0e-ff52ab55cf5f" />
+
 CPU and memory utilization are **3%** and **6%**, respectively, with **2** running tasks.
 
 ### Applying 20 users
@@ -151,6 +152,7 @@ CPU and memory utilization are **3%** and **6%**, respectively, with **2** runni
 <img width="1178" height="331" alt="image" src="https://github.com/user-attachments/assets/d5c3f817-f1ac-40f7-bd4d-8da1f702341d" />
 <img width="1157" height="252" alt="image" src="https://github.com/user-attachments/assets/fb4e96e8-c113-4155-8781-c0328cb41b69" />
 <img width="1164" height="279" alt="image" src="https://github.com/user-attachments/assets/6ca39f63-46ee-4986-a65b-095172921ed3" />
+
 ### Key Observation
 The system had self-healing mechanism, auto detecting "unhealthy", then created a new task, maintaining healthy status.
 
@@ -158,6 +160,7 @@ The system had self-healing mechanism, auto detecting "unhealthy", then created 
 ### 90 default CPU utilization
 <img width="1162" height="635" alt="image" src="https://github.com/user-attachments/assets/bb79900d-f58d-4786-8982-03a0110ced00" />
 <img width="2928" height="1800" alt="total_requests_per_second_1760160011 663" src="https://github.com/user-attachments/assets/16605e56-9ed8-4f24-8401-c62f29d407ec" />
+
 ### 50 default CPU utilization
 <img width="1161" height="655" alt="image" src="https://github.com/user-attachments/assets/764fd7b5-d6d9-43cb-be9a-a36c104c14bc" />
 <img width="2928" height="1800" alt="total_requests_per_second_1760164237 933" src="https://github.com/user-attachments/assets/93a7d698-01a8-4e3e-a9ca-f147bbbab5ac" />
@@ -209,6 +212,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
