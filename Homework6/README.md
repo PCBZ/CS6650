@@ -161,6 +161,20 @@ The system had self-healing mechanism, auto detecting "unhealthy", then created 
 | 90 CPU      | 3          | 100           | 18               | 30  | 150                    | 980                    |
 | 50 CPU      | 6          | 50            | 11               | 35  | 41                     | 200                    |
 
+### Stop multiple instances
+<img width="1153" height="635" alt="image" src="https://github.com/user-attachments/assets/52f8362f-5d23-40b3-a46d-5c288c33b0a4" />
+<img width="1172" height="456" alt="image" src="https://github.com/user-attachments/assets/1d0aab3e-2bc4-4e29-b5ea-329e58753477" />
+<img width="1181" height="623" alt="image" src="https://github.com/user-attachments/assets/38b512ee-1a2b-43e9-a9b9-f77250816eff" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760224647 546" src="https://github.com/user-attachments/assets/bd070c04-f3c7-4481-b63f-dc2ed185a81b" />
+
+Stopped 3 instances, then the service recovered to 6 instances. Found a jitter on Locust test and CPU utilization as well.
+
+### Stop all instances
+<img width="1166" height="621" alt="image" src="https://github.com/user-attachments/assets/9adad0ad-fbc8-48e8-912f-b858b03a119b" />
+<img width="2928" height="1800" alt="total_requests_per_second_1760227106 183" src="https://github.com/user-attachments/assets/b67fd978-c83e-4917-a655-fcc1b9ae43b1" />
+
+Stopped all instances, then the service recoverd to 6 instances. Found some failed requests on Locust tests.
+
 ## Result:
 ### How the system solved your Part II bottleneck
 **Part II bottleneck**
@@ -189,3 +203,4 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
