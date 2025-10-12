@@ -32,6 +32,7 @@ Switching to 512v CPU and 1G memory and keeping test with 20 users:
 | **CPU Utilization** | 80% | 40% |
 | 50% response time (ms) | 150 | 45 |
 | 95% response time (ms) | 600 | 130 |
+
 To some extend, scalling up can address the bottleneck limit problem.
 
 
@@ -208,5 +209,6 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
