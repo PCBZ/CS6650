@@ -83,17 +83,24 @@ class MapReduceClient:
         loop = asyncio.get_event_loop()
         
         def blocking_request():
-            request = urllib.request.Request(url)
-            with urllib.request.urlopen(request, timeout=300) as response:
-                if response.status != 200:
-                    raise Exception(f"HTTP request failed with status {response.status}")
-                return json.load(response)
+            import urllib.error
+            try:
+                request = urllib.request.Request(url)
+                with urllib.request.urlopen(request, timeout=300) as response:
+                    if response.status != 200:
+                        return {"error": f"HTTP request failed with status {response.status}"}
+                    return json.load(response)
+            except urllib.error.HTTPError as e:
+                # Handle HTTP errors (4xx, 5xx)
+                return {"error": f"HTTP {e.code} error: {e.reason}"}
+            except Exception as e:
+                return {"error": f"Request failed: {str(e)}"}
         
         try:
             return await loop.run_in_executor(None, blocking_request)
         except Exception as e:
             print(f"HTTP request failed for {url}: {e}")
-            raise
+            return {"error": f"Request execution failed: {str(e)}"}
     
     def print_result(self, result: MapReduceResult):
         print(f"MapReduce Result: {result.message}")
@@ -107,12 +114,18 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     task_manager = ECSTaskManager(s3_bucket="mapreduce-experiment-975050147762")
+
+    # Clean S3 results before starting
+    print("Cleaning previous S3 results...")
+    loop.run_until_complete(task_manager.clean_s3_results())
+
     task_ips = loop.run_until_complete(task_manager.get_mapreduce_ips())
 
+    mapper_ips = task_ips.mapper_ips[:chunks-1] + task_ips.mapfunctional_mapper_ips if task_ips.mapfunctional_mapper_ips else []
 
     client = MapReduceClient(
         splitter_ip=task_ips.splitter_ip,
-        mapper_ips=task_ips.mapper_ips,
+        mapper_ips=mapper_ips,
         reducer_ip=task_ips.reducer_ip
     )
     result = loop.run_until_complete(client.perform_mapreduce(file_url, chunks=chunks))
