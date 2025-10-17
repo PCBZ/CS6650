@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 import time
 import urllib.request
 import urllib.parse
@@ -56,6 +57,20 @@ class MapReduceClient:
             ))
         
         map_results = await asyncio.gather(*map_tasks)
+
+        for i, result in enumerate(map_results):
+            if isinstance(result, dict) and "error" in result:
+                alternate_mapper_ip = self._get_alternate_mapper(i)
+                if alternate_mapper_ip:
+                    chunk_url = chunk_urls[i]
+                    alternative_result = await self.http_get_json(
+                        f"http://{alternate_mapper_ip}:8080/map",
+                        params={"url": chunk_url}
+                    )
+                    map_results[i] = alternative_result
+                else:
+                    raise Exception(f"Map operation failed and no alternate mapper available")
+
         print(f"Completed {len(map_results)} map operations")
 
         # 3. Reduce the mapped results
@@ -73,6 +88,10 @@ class MapReduceClient:
             unique_words=reduce_result.get("unique_words", 0),
             message=reduce_result.get("message", "")
         )
+    
+    def _get_alternate_mapper(self, failed_mapper_index: int) -> Optional[str]:
+        available_mappers = [ip for i, ip in enumerate(self.mapper_ips) if i != failed_mapper_index]
+        return available_mappers[random.randint(0, len(available_mappers)-1)] if available_mappers else None
     
     async def http_get_json(self, url: str, params: Optional[Dict[str, str]] = None) -> Any:
         if params:
