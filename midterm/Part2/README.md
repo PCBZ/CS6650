@@ -1,12 +1,12 @@
 # Crashing and Recovering Mappers in MapReduce
 In this part of the midterm, I enhanced my MapReduce implementation to handle mapper failures gracefully. I created a "malfunctional" mapper that return 500 error during execution to simulate real-world failures. 
 
-For an example file, I count it on a local script, showing results:
-<img width="686" height="96" alt="image" src="https://github.com/user-attachments/assets/7cbbe5a7-f34e-43b0-8978-94cefe0a11e7" />
+For an example file, I count it on a local script, showing results:  
+<img width="686" height="96" alt="image" src="https://github.com/user-attachments/assets/7cbbe5a7-f34e-43b0-8978-94cefe0a11e7" />  
 However if I replace 1 mapper with a malfunctional-mapper, 
 <img width="998" height="444" alt="image" src="https://github.com/user-attachments/assets/a6aeb597-9366-4514-ad39-7ef64b889969" />
-it returns:
-<img width="689" height="126" alt="image" src="https://github.com/user-attachments/assets/df9fdc77-0980-4320-a294-5a1ef760f56b" />
+it returns:  
+<img width="689" height="126" alt="image" src="https://github.com/user-attachments/assets/df9fdc77-0980-4320-a294-5a1ef760f56b" />  
 It indicates that if a mapper failed, the task assigned to it will not be done correctly, so the total result will lose part of result.
 
 The failure comes from:
