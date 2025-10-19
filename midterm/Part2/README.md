@@ -4,14 +4,14 @@ In this part of the midterm, I enhanced my MapReduce implementation to handle ma
 ## MapReduce Fault by a mapper failure
 ### The correct counting result
 For an example file, the correct counting results:  
-<img width="686" height="96" alt="image" src="https://github.com/user-attachments/assets/7cbbe5a7-f34e-43b0-8978-94cefe0a11e7" /> 
+<img width="686" height="96" alt="image" src="https://github.com/user-attachments/assets/7cbbe5a7-f34e-43b0-8978-94cefe0a11e7" />  
 **The total word count is 6883544**
 
 ### The wrong counting result
 However if I replace 1 mapper with a malfunctional-mapper:   
-<img width="998" height="444" alt="image" src="https://github.com/user-attachments/assets/a6aeb597-9366-4514-ad39-7ef64b889969" />
+<img width="998" height="444" alt="image" src="https://github.com/user-attachments/assets/a6aeb597-9366-4514-ad39-7ef64b889969" />  
 it returns:  
-<img width="689" height="126" alt="image" src="https://github.com/user-attachments/assets/df9fdc77-0980-4320-a294-5a1ef760f56b" /> 
+<img width="689" height="126" alt="image" src="https://github.com/user-attachments/assets/df9fdc77-0980-4320-a294-5a1ef760f56b" />  
 **The total word count is 5735753**  
 It indicates that if a mapper failed, the task assigned to it will not be done, so the total result will lose its part of result.
 
