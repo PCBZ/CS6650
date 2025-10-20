@@ -48,28 +48,36 @@ class MapReduceClient:
         chunk_urls = split_result.get("chunk_urls", [])
 
         # 2. Map each chunk
-        map_tasks = []
-        for i, chunk_url in enumerate(chunk_urls):
-            mapper_ip = mapper_ips[i % len(mapper_ips)]
-            map_tasks.append(self.http_get_json(
-                f"http://{mapper_ip}:8080/map",
-                params={"url": chunk_url}
-            ))
-        
-        map_results = await asyncio.gather(*map_tasks)
+        # map_tasks = []
+        # for i, chunk_url in enumerate(chunk_urls):
+        #     mapper_ip = mapper_ips[i % len(mapper_ips)]
 
-        for i, result in enumerate(map_results):
-            if isinstance(result, dict) and "error" in result:
-                alternate_mapper_ip = self._get_alternate_mapper(i)
-                if alternate_mapper_ip:
-                    chunk_url = chunk_urls[i]
-                    alternative_result = await self.http_get_json(
-                        f"http://{alternate_mapper_ip}:8080/map",
-                        params={"url": chunk_url}
-                    )
-                    map_results[i] = alternative_result
-                else:
-                    raise Exception(f"Map operation failed and no alternate mapper available")
+        #     async def make_request(idx=i, url=chunk_url, ip=mapper_ip):
+        #         if idx == 1:
+        #             await asyncio.sleep(10.0)
+        #         return await self.http_get_json(
+        #             f"http://{ip}:8080/map",
+        #             params={"url": url}
+        #         )
+
+        #     map_tasks.append(make_request())
+        
+        # map_results = await asyncio.gather(*map_tasks)
+
+        # for i, result in enumerate(map_results):
+        #     if isinstance(result, dict) and "error" in result:
+        #         alternate_mapper_ip = self._get_alternate_mapper(i)
+        #         if alternate_mapper_ip:
+        #             chunk_url = chunk_urls[i]
+        #             alternative_result = await self.http_get_json(
+        #                 f"http://{alternate_mapper_ip}:8080/map",
+        #                 params={"url": chunk_url}
+        #             )
+        #             map_results[i] = alternative_result
+        #         else:
+        #             raise Exception(f"Map operation failed and no alternate mapper available")
+
+        map_results = await self.process_map_chunks(chunk_urls, mapper_ips)
 
         print(f"Completed {len(map_results)} map operations")
 
@@ -93,6 +101,70 @@ class MapReduceClient:
         available_mappers = [ip for i, ip in enumerate(self.mapper_ips) if i != failed_mapper_index]
         return available_mappers[random.randint(0, len(available_mappers)-1)] if available_mappers else None
     
+    async def process_map_chunks(self, chunk_urls: List[str], mapper_ips: List[str]) -> List[Dict[str, Any]]:
+        """Process map chunks with fault tolerance"""
+
+        final_results = [None] * len(chunk_urls)
+        completed_chunks = set()
+
+        # Create initial mapping tasks
+        active_tasks = {}
+        for i, chunk_url in enumerate(chunk_urls):
+            mapper_ip = mapper_ips[i % len(mapper_ips)]
+
+            async def make_request():
+                if i == 0:
+                    await asyncio.sleep(10.0)
+                return await self.http_get_json(
+                    f"http://{mapper_ip}:8080/map",
+                    params={"url": chunk_url}
+                )
+
+            task = asyncio.create_task(make_request())
+            active_tasks[i] = task
+
+        while len(completed_chunks) < len(chunk_urls):
+            if not active_tasks:
+                break  # No more active tasks to process
+            done_tasks, _ = await asyncio.wait(active_tasks.values(), return_when=asyncio.FIRST_COMPLETED)
+            
+            for completed_task in done_tasks:
+                # Find which chunk this task corresponds to
+                chunk_idx = next((idx for idx, task in active_tasks.items() if task == completed_task), None)
+                if chunk_idx is None:
+                    continue
+
+                try:
+                    result = await completed_task
+                    if isinstance(result, dict) and "error" in result:
+                        alternate_mapper_ip = self._get_alternate_mapper(chunk_idx)
+                        if alternate_mapper_ip:
+                            chunk_url = chunk_urls[chunk_idx]
+                            retry_task = asyncio.create_task(
+                                self.http_get_json(
+                                    f"http://{alternate_mapper_ip}:8080/map",
+                                    params={"url": chunk_url}
+                                )
+                            )
+                            active_tasks[chunk_idx] = retry_task
+                            continue
+                        else:
+                            raise Exception(f"Map operation failed and no alternate mapper available")
+                    else:
+                        final_results[chunk_idx] = result
+                    
+                    completed_chunks.add(chunk_idx)
+                    del active_tasks[chunk_idx]
+                
+                except Exception as e:
+                    print(f"Error processing chunk {chunk_idx}: {e}")
+                    final_results[chunk_idx] = {"error": str(e)}
+                    completed_chunks.add(chunk_idx)
+                    if chunk_idx in active_tasks:
+                        del active_tasks[chunk_idx]
+
+        return final_results
+
     async def http_get_json(self, url: str, params: Optional[Dict[str, str]] = None) -> Any:
         if params:
             url += "?" + urllib.parse.urlencode(params)
