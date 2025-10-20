@@ -65,6 +65,7 @@ async def make_request():
     )
 ```
 causes the entire map phase to be delayed by at least 10 seconds, even if other mappers complete their tasks quickly.
+<img width="719" height="83" alt="Screenshot 2025-10-19 at 20 46 56" src="https://github.com/user-attachments/assets/441b1956-f114-428e-ba2f-41a0f1dd7352" />
 
 To improve this, I modified the `process_map_chunks` method to use `asyncio.as_completed`, allowing the client to handle map results as they arrive. This way, if a mapper fails, the client can immediately reassign the task to another mapper without waiting for all tasks to finish.
 ```python
@@ -106,5 +107,7 @@ async def process_map_chunks(self, chunk_urls: List[str], mapper_ips: List[str])
 With this change, the client can efficiently handle mapper failures and reassign tasks in real-time.
 
 Adding the same 10 second delay to 1 mapper now only delays the overall map phase by a few seconds, as other mappers complete their tasks and the client reassigns the failed task promptly. This results in a more resilient and efficient MapReduce implementation.
+<img width="715" height="85" alt="Screenshot 2025-10-19 at 20 48 53" src="https://github.com/user-attachments/assets/9d0d5c20-8b7b-42dd-821d-51bead061d99" />
+
 
 
