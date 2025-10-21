@@ -1,23 +1,22 @@
 # Homework 6
 ## Search API single node performance
 ### Baseline 5 users - 2 min
-<img width="2928" height="1800" alt="total_requests_per_second_1761024913 148" src="https://github.com/user-attachments/assets/49013915-cda0-401e-a516-b71081b2d6f1" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761078531 749" src="https://github.com/user-attachments/assets/47c16366-b4f8-4a75-b9a2-31d39be18ba8" />
 
-<img width="1349" height="499" alt="image" src="https://github.com/user-attachments/assets/0e5799ff-4c5c-46c2-bd49-2c8fff6ef31f" />
+<img width="1079" height="503" alt="image" src="https://github.com/user-attachments/assets/80f9baa4-ac82-4b85-898d-4b112e818ce9" />
 
 ### Breaking Point 20 users - 3 min
-<img width="2928" height="1800" alt="total_requests_per_second_1761025282 845" src="https://github.com/user-attachments/assets/3c4447a1-5d25-44d4-ae2c-bfb88ee3295a" />
-
-
+<img width="2928" height="1800" alt="total_requests_per_second_1761078072 891" src="https://github.com/user-attachments/assets/7e927857-5d3c-44a3-8af6-2d01fdc284f4" />
+<img width="1225" height="498" alt="image" src="https://github.com/user-attachments/assets/4f71c219-4540-4352-af60-9221d28b7a2c" />
 
 With load increasing, both CPU and memory utilization increase.
 | Metric | 5 Users | 20 Users |
 |--------|---------|----------|
-| RPS    |  100    |  320  |
-| **CPU Utilization** | 14% | 40% |
-| **Memory Utilization** | 10% | 10% |
-| 50% response time (ms) | 40 | 50 |
-| 95% response time (ms) | 80 | 90 |
+| RPS    |  142    |  500  |
+| **CPU Utilization** | 14% | 44% |
+| **Memory Utilization** | 17% | 10% |
+| 50% response time (ms) | 32 | 35 |
+| 95% response time (ms) | 50 | 80 |
 
 **Key Observations:**
 - Memory usage remains stable
@@ -26,17 +25,15 @@ With load increasing, both CPU and memory utilization increase.
 Increase CPU allocation from 256 → 512 CPU units to handle higher load.
 <img width="2928" height="1800" alt="total_requests_per_second_1761026159 267" src="https://github.com/user-attachments/assets/05305d1f-58e7-444c-a97f-7074ffb187d9" />
 
-<img width="1260" height="470" alt="image" src="https://github.com/user-attachments/assets/4f0aa654-409e-4a86-827b-eef0f91f25db" />
+<img width="1263" height="504" alt="image" src="https://github.com/user-attachments/assets/d4d68272-f40e-42f2-aa2b-35c46f6b47c4" />
+
 
 Switching to 512v CPU and 1G memory and keeping test with 20 users:
 | Metric (20 users) | 256v CPU | 512v CPU |
 |--------|---------| -------- |
-| **CPU Utilization** | 40% | 22% |
-| 50% response time (ms) | 50 | 40 |
-| 95% response time (ms) | 90 | 80 |
-
-To some extend, scalling up can address the bottleneck limit problem.
-
+| **CPU Utilization** | 44% | 23% |
+| 50% response time (ms) | 35 | 40 |
+| 95% response time (ms) | 80 | 80 |
 
 ## Horizontal Scaling Infrastructure
 ### Architecture with ALB
@@ -110,17 +107,15 @@ variable "health_check_path" {
 }
 ```
 
-CPU and memory utilization are **3%** and **6%**, respectively, with **2** running tasks.
 
 ### Applying 20 users
-<img width="1242" height="521" alt="image" src="https://github.com/user-attachments/assets/ec609134-963d-4ccc-a86e-00f6d6686cdb" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761080908 427" src="https://github.com/user-attachments/assets/15fb9367-6ad0-4022-a773-41645d814f02" />
+<img width="1247" height="507" alt="image" src="https://github.com/user-attachments/assets/f0b5a3d7-3e18-4ac0-97ed-53f0cc4556b8" />
 
-<img width="2928" height="1800" alt="total_requests_per_second_1761027693 954" src="https://github.com/user-attachments/assets/8828d505-3c63-4ba9-b4ff-79c0ebaf7778" />
+### Upgrading to 100 users
+<img width="2928" height="1800" alt="total_requests_per_second_1761081298 072" src="https://github.com/user-attachments/assets/04e890be-f816-4fbc-ab1d-2efd58012ad8" />
+<img width="1338" height="509" alt="image" src="https://github.com/user-attachments/assets/65f3920e-50e4-44ad-8079-06cb29b018e4" />
 
-### Upgrading to 60 users
-<img width="1340" height="501" alt="image" src="https://github.com/user-attachments/assets/93d1ba62-1c64-4620-87a9-2131acd812b0" />
-
-<img width="2928" height="1800" alt="total_requests_per_second_1761028248 855" src="https://github.com/user-attachments/assets/b97d84d1-cae6-4e04-a601-b576201cd8d8" />
 
 ### Upgrading to 400 users
 <img width="1348" height="448" alt="image" src="https://github.com/user-attachments/assets/a17808ae-a2d2-4bf9-8863-29c45008eaee" />
@@ -208,6 +203,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
