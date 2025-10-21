@@ -24,15 +24,16 @@ With load increasing, both CPU and memory utilization increase.
 - CPU becomes the primary bottleneck
  
 Increase CPU allocation from 256 → 512 CPU units to handle higher load.
-<img width="1180" height="485" alt="image" src="https://github.com/user-attachments/assets/96bb816b-8574-4d96-8216-e0a195e54fac" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760236394 877" src="https://github.com/user-attachments/assets/c8d51991-6675-4d4e-b86e-89fb8eedc632" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761026159 267" src="https://github.com/user-attachments/assets/05305d1f-58e7-444c-a97f-7074ffb187d9" />
+
+<img width="1260" height="470" alt="image" src="https://github.com/user-attachments/assets/4f0aa654-409e-4a86-827b-eef0f91f25db" />
 
 Switching to 512v CPU and 1G memory and keeping test with 20 users:
 | Metric (20 users) | 256v CPU | 512v CPU |
 |--------|---------| -------- |
-| **CPU Utilization** | 80% | 40% |
-| 50% response time (ms) | 150 | 45 |
-| 95% response time (ms) | 600 | 130 |
+| **CPU Utilization** | 40% | 22% |
+| 50% response time (ms) | 50 | 40 |
+| 95% response time (ms) | 90 | 80 |
 
 To some extend, scalling up can address the bottleneck limit problem.
 
@@ -213,6 +214,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
