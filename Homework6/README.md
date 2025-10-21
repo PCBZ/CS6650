@@ -1,22 +1,23 @@
 # Homework 6
 ## Search API single node performance
 ### Baseline 5 users - 2 min
-<img width="2928" height="1800" alt="total_requests_per_second_1759955371 654" src="https://github.com/user-attachments/assets/d900045a-97df-49a4-a3b1-05969ea16978" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761024913 148" src="https://github.com/user-attachments/assets/49013915-cda0-401e-a516-b71081b2d6f1" />
 
-<img width="1118" height="344" alt="image" src="https://github.com/user-attachments/assets/b3dd5ef8-dc85-48b9-8d7b-a57928982f5c" />
+<img width="1349" height="499" alt="image" src="https://github.com/user-attachments/assets/0e5799ff-4c5c-46c2-bd49-2c8fff6ef31f" />
 
 ### Breaking Point 20 users - 3 min
-<img width="2928" height="1800" alt="total_requests_per_second_1759966171 661" src="https://github.com/user-attachments/assets/4f349579-617c-4956-9f97-577c18a55901" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761025282 845" src="https://github.com/user-attachments/assets/3c4447a1-5d25-44d4-ae2c-bfb88ee3295a" />
 
-<img width="1141" height="356" alt="image" src="https://github.com/user-attachments/assets/1f385f69-6d8b-402b-b132-6fbad4a4e885" />
+
 
 With load increasing, both CPU and memory utilization increase.
 | Metric | 5 Users | 20 Users |
 |--------|---------|----------|
-| **CPU Utilization** | 20% | 80% |
-| **Memory Utilization** | 10% | 11% |
-| 50% response time (ms) | 40 | 150 |
-| 95% response time (ms) | 150 | 600 |
+| RPS    |  100    |  320  |
+| **CPU Utilization** | 14% | 40% |
+| **Memory Utilization** | 10% | 10% |
+| 50% response time (ms) | 40 | 50 |
+| 95% response time (ms) | 80 | 90 |
 
 **Key Observations:**
 - Memory usage remains stable
@@ -212,6 +213,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
