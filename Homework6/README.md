@@ -110,35 +110,29 @@ variable "health_check_path" {
 }
 ```
 
-### Initial Service Status
-<img width="1175" height="487" alt="image" src="https://github.com/user-attachments/assets/671996fc-efea-440e-bb0e-ff52ab55cf5f" />
-
 CPU and memory utilization are **3%** and **6%**, respectively, with **2** running tasks.
 
 ### Applying 20 users
-<img width="1158" height="447" alt="image" src="https://github.com/user-attachments/assets/d7d1d323-441d-4bd5-b1dd-7e66c2e786eb" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760145494 089" src="https://github.com/user-attachments/assets/9bf0abe4-4c8e-4f91-bce0-e167b9135bc5" />
+<img width="1242" height="521" alt="image" src="https://github.com/user-attachments/assets/ec609134-963d-4ccc-a86e-00f6d6686cdb" />
 
-### Upgrading to 40 users
-<img width="1180" height="476" alt="image" src="https://github.com/user-attachments/assets/7147df18-f416-4faa-a3f4-4ce20d4ccb08" />
-<img width="1180" height="476" alt="image" src="https://github.com/user-attachments/assets/5adce82d-b237-4810-aa7c-b3b869272928" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761027693 954" src="https://github.com/user-attachments/assets/8828d505-3c63-4ba9-b4ff-79c0ebaf7778" />
 
 ### Upgrading to 60 users
-<img width="1175" height="478" alt="image" src="https://github.com/user-attachments/assets/3d84ce33-0d06-498a-975d-297d2314d9d0" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760151647 776" src="https://github.com/user-attachments/assets/1a6b673a-bc19-41de-872e-c84b1a872cc6" />
+<img width="1340" height="501" alt="image" src="https://github.com/user-attachments/assets/93d1ba62-1c64-4620-87a9-2131acd812b0" />
 
-### Upgrading to 80 users
-<img width="1182" height="485" alt="image" src="https://github.com/user-attachments/assets/cbb8e809-1dde-49eb-b9a8-61a0e55dbd28" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760154283 864" src="https://github.com/user-attachments/assets/3ed3351d-0fcc-421c-aa19-0f6789f6c8ce" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761028248 855" src="https://github.com/user-attachments/assets/b97d84d1-cae6-4e04-a601-b576201cd8d8" />
+
+### Upgrading to 400 users
+<img width="1348" height="448" alt="image" src="https://github.com/user-attachments/assets/a17808ae-a2d2-4bf9-8863-29c45008eaee" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761028248 855" src="https://github.com/user-attachments/assets/40fbb0c9-cff9-445a-80e3-931a1dc25f90" />
+
 
 
 #### Performance Test Results Comparison
 | Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
 |-------|------------|---------------|------------------|-----|------------------------|------------------------|
-| 0     | 2          | 3             | 6                | N/A | N/A                    | N/A                    |
-| 20    | 2          | 40            | 10               | 9   | 40                     | 200                    |
-| 40    | 2          | 70            | 14               | 17  | 70                     | 440                    |
-| 60    | 3          | 80            | 15               | 25  | 55                     | 430                    |
+| 20    | 2          | 20            | 10               | 300 | 50                     | 100                    |
+| 60    | 2          | 35            | 10               | 500 | 100                   | 200                    |
 | 80    | 4          | 75            | 18               | 34  | 47                     | 340                    |
 
 ### Key Observations
@@ -214,6 +208,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
