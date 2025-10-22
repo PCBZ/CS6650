@@ -129,7 +129,6 @@ variable "health_check_path" {
 |-------|------------|---------------|------------------|-----|------------------------|------------------------|
 | 20    | 2          | 60            | 10               | 120 | 150                    | 300                    |
 | 40    | 3          | 45            | 10               | 130 | 260                    | 470                    |
-| 80    | 4          | 75            | 18               | 34  | 47                     | 340                    |
 
 ### Key Observations
 **Auto-Scaling is Responsive**  
@@ -204,6 +203,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
