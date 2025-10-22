@@ -109,15 +109,16 @@ variable "health_check_path" {
 
 
 ### Applying 20 users
-<img width="2928" height="1800" alt="total_requests_per_second_1761080908 427" src="https://github.com/user-attachments/assets/15fb9367-6ad0-4022-a773-41645d814f02" />
-<img width="1247" height="507" alt="image" src="https://github.com/user-attachments/assets/f0b5a3d7-3e18-4ac0-97ed-53f0cc4556b8" />
-
-### Upgrading to 100 users
-<img width="2928" height="1800" alt="total_requests_per_second_1761081298 072" src="https://github.com/user-attachments/assets/04e890be-f816-4fbc-ab1d-2efd58012ad8" />
-<img width="1338" height="509" alt="image" src="https://github.com/user-attachments/assets/65f3920e-50e4-44ad-8079-06cb29b018e4" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761116983 614" src="https://github.com/user-attachments/assets/061fe4cb-de63-4ffb-8c94-5b263ffdce68" />
+<img width="1295" height="461" alt="image" src="https://github.com/user-attachments/assets/816df708-25b3-49c1-9625-a402aef7c86d" />
 
 
-### Upgrading to 400 users
+### Upgrading to 40 users
+<img width="2928" height="1800" alt="total_requests_per_second_1761117397 901" src="https://github.com/user-attachments/assets/c1f2bcd5-07b6-4023-ae93-70c1f5e489ef" />
+<img width="1339" height="494" alt="image" src="https://github.com/user-attachments/assets/35cc0aaa-8466-4e35-ab38-9966e58fc712" />
+
+
+### Upgrading to 120 users
 <img width="1348" height="448" alt="image" src="https://github.com/user-attachments/assets/a17808ae-a2d2-4bf9-8863-29c45008eaee" />
 <img width="2928" height="1800" alt="total_requests_per_second_1761028248 855" src="https://github.com/user-attachments/assets/40fbb0c9-cff9-445a-80e3-931a1dc25f90" />
 
@@ -126,8 +127,8 @@ variable "health_check_path" {
 #### Performance Test Results Comparison
 | Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
 |-------|------------|---------------|------------------|-----|------------------------|------------------------|
-| 20    | 2          | 20            | 10               | 300 | 50                     | 100                    |
-| 60    | 2          | 35            | 10               | 500 | 100                   | 200                    |
+| 20    | 2          | 60            | 10               | 120 | 150                    | 300                    |
+| 40    | 3          | 45            | 10               | 130 | 260                    | 470                    |
 | 80    | 4          | 75            | 18               | 34  | 47                     | 340                    |
 
 ### Key Observations
@@ -203,6 +204,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
