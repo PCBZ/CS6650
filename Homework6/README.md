@@ -118,9 +118,10 @@ variable "health_check_path" {
 <img width="1339" height="494" alt="image" src="https://github.com/user-attachments/assets/35cc0aaa-8466-4e35-ab38-9966e58fc712" />
 
 
-### Upgrading to 120 users
-<img width="1348" height="448" alt="image" src="https://github.com/user-attachments/assets/a17808ae-a2d2-4bf9-8863-29c45008eaee" />
-<img width="2928" height="1800" alt="total_requests_per_second_1761028248 855" src="https://github.com/user-attachments/assets/40fbb0c9-cff9-445a-80e3-931a1dc25f90" />
+### Upgrading to 60 users
+<img width="2928" height="1800" alt="total_requests_per_second_1761157409 329" src="https://github.com/user-attachments/assets/29bca551-a49b-4494-9c18-f0aef3298c48" />
+<img width="1350" height="512" alt="image" src="https://github.com/user-attachments/assets/94c9f823-6ed9-4063-bbd8-4800c749610e" />
+
 
 
 
@@ -128,7 +129,8 @@ variable "health_check_path" {
 | Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
 |-------|------------|---------------|------------------|-----|------------------------|------------------------|
 | 20    | 2          | 60            | 10               | 120 | 150                    | 300                    |
-| 40    | 3          | 45            | 10               | 130 | 260                    | 470                    |
+| 40    | 3          | 45            | 10               | 130 | 260                    | 470                    
+| 60    | 4          | 98            | 12               | 500 | 80                     | 320                    |
 
 ### Key Observations
 **Auto-Scaling is Responsive**  
@@ -203,6 +205,7 @@ Failed instances automatically replaced without manual intervention
 1. **Fault Tolerance**
 2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
 3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+
 
 
 
