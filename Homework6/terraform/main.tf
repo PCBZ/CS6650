@@ -39,7 +39,7 @@ module "ecs" {
   image                  = "${module.ecr.repository_url}:latest"
   image_digest           = docker_image.app.repo_digest
   container_port         = var.container_port
-  subnet_ids             = module.network.subnet_ids
+  subnet_ids             = module.network.private_subnet_ids
   security_group_ids     = [module.network.security_group_id]
   execution_role_arn     = data.aws_iam_role.lab_role.arn
   task_role_arn          = data.aws_iam_role.lab_role.arn
@@ -52,7 +52,7 @@ module "ecs" {
   min_capacity           = var.min_capacity
   max_capacity           = var.max_capacity
   target_cpu_utilization = var.target_cpu_utilization
-  enable_autoscaling     = true
+  enable_autoscaling     = false
 
   depends_on = [module.alb, docker_registry_image.app]
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"time"
 )
 
 // ProductStore provides thread-safe in-memory storage for products using sync.Map
@@ -71,4 +72,91 @@ func (ps *ProductStore) GetProductsCount() int {
 		return true
 	})
 	return count
+}
+
+// === ORDER STORE ===
+
+// OrderStore provides thread-safe in-memory storage for orders
+type OrderStore struct {
+	orders sync.Map // map[string]*Order
+	stats  OrderStats
+	mutex  sync.RWMutex
+}
+
+// NewOrderStore creates a new OrderStore instance
+func NewOrderStore() *OrderStore {
+	return &OrderStore{
+		stats: OrderStats{},
+	}
+}
+
+// GetOrder retrieves an order by its ID
+func (os *OrderStore) GetOrder(id string) (*Order, bool) {
+	value, exists := os.orders.Load(id)
+	if !exists {
+		return nil, false
+	}
+
+	order, ok := value.(*Order)
+	if !ok {
+		return nil, false
+	}
+
+	return order, true
+}
+
+// SetOrder stores an order with the given ID and updates stats
+func (os *OrderStore) SetOrder(id string, order *Order) {
+	os.orders.Store(id, order)
+	os.updateStats()
+}
+
+// GetStats returns current order processing statistics
+func (os *OrderStore) GetStats() OrderStats {
+	os.mutex.RLock()
+	defer os.mutex.RUnlock()
+
+	os.updateStats()
+	return os.stats
+}
+
+// updateStats recalculates order statistics
+func (os *OrderStore) updateStats() {
+	var pending, processing, completed int
+	var totalTime time.Duration
+	var count int
+
+	os.orders.Range(func(key, value interface{}) bool {
+		order, ok := value.(*Order)
+		if !ok {
+			return true
+		}
+
+		count++
+		switch order.Status {
+		case "pending":
+			pending++
+		case "processing":
+			processing++
+		case "completed":
+			completed++
+			// Calculate processing time for completed orders
+			if !order.CreatedAt.IsZero() {
+				totalTime += time.Since(order.CreatedAt)
+			}
+		}
+		return true
+	})
+
+	os.mutex.Lock()
+	defer os.mutex.Unlock()
+
+	os.stats.TotalOrders = count
+	os.stats.PendingOrders = pending
+	os.stats.ProcessingOrders = processing
+	os.stats.CompletedOrders = completed
+
+	if completed > 0 {
+		os.stats.AverageTime = float64(totalTime.Milliseconds()) / float64(completed)
+	}
 }

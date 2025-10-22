@@ -1,11 +1,16 @@
 output "subnet_ids" {
-  description = "IDs of the default VPC subnets"
-  value       = data.aws_subnets.default.ids
+  description = "IDs of the public subnets for ALB"
+  value       = aws_subnet.public[*].id
+}
+
+output "private_subnet_ids" {
+  description = "IDs of the private subnets for ECS tasks"
+  value       = aws_subnet.private[*].id
 }
 
 output "vpc_id" {
-  description = "ID of the default VPC"
-  value       = data.aws_vpc.default.id
+  description = "ID of the created VPC"
+  value       = aws_vpc.main.id
 }
 
 output "security_group_id" {

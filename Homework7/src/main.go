@@ -2,8 +2,9 @@ package main
 
 import "fmt"
 
-// Global product store
+// Global stores
 var productStore = NewProductStore()
+var orderStore = NewOrderStore()
 
 func main() {
 	// Generate sample data

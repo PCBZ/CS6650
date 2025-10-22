@@ -15,7 +15,7 @@ func SetupRouter() *gin.Engine {
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "healthy",
-			"service": "product-api",
+			"service": "order-processing-api",
 		})
 	})
 
@@ -31,6 +31,8 @@ func setupV1Routes(router *gin.Engine) {
 	{
 		// Products domain routes
 		setupProductsRoutes(v1)
+		// Orders domain routes
+		setupOrdersRoutes(v1)
 	}
 }
 
@@ -42,5 +44,17 @@ func setupProductsRoutes(rg *gin.RouterGroup) {
 		products.GET("/search", productAPI.SearchProducts)
 		products.GET("/:productId", productAPI.GetProduct)
 		products.POST("/:productId/details", productAPI.AddProductDetails)
+	}
+}
+
+// setupOrdersRoutes configures order-related routes
+func setupOrdersRoutes(rg *gin.RouterGroup) {
+	orders := rg.Group("/orders")
+	orderAPI := NewOrderAPI()
+	{
+		// Synchronous order processing endpoint (Phase 1)
+		orders.POST("/sync", orderAPI.ProcessOrderSync)
+		// Statistics for monitoring during load tests
+		orders.GET("/stats", orderAPI.GetOrderStats)
 	}
 }

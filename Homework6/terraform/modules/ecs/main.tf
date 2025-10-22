@@ -55,7 +55,7 @@ resource "aws_ecs_service" "this" {
   network_configuration {
     subnets         = var.subnet_ids
     security_groups = var.security_group_ids
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   # Load balancer configuration
@@ -68,10 +68,10 @@ resource "aws_ecs_service" "this" {
     }
   }
 
-  # Ignore desired_count changes when auto-scaling is enabled
-  lifecycle {
-    ignore_changes = [desired_count]
-  }
+  # No lifecycle ignore rules needed when auto-scaling is disabled
+  # lifecycle {
+  #   ignore_changes = [desired_count]
+  # }
 }
 
 # Auto Scaling Target
