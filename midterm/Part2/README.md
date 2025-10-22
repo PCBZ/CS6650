@@ -106,5 +106,3 @@ async def process_map_chunks(self, chunk_urls: List[str], mapper_ips: List[str])
 With this change, the client can efficiently handle mapper failures and reassign tasks in real-time.
 
 Adding the same 10 second delay to 1 mapper now only delays the overall map phase by a few seconds, as other mappers complete their tasks and the client reassigns the failed task promptly. This results in a more resilient and efficient MapReduce implementation.
-
-

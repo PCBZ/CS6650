@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -96,22 +95,25 @@ func (api *ProductAPI) SearchProducts(c *gin.Context) {
 	// Convert query to lowercase for case-insensitive search
 	queryLower := strings.ToLower(query)
 
-	// Get all product IDs
-	allIDs := api.store.GetAllProductIDs()
+	// Efficiently get only the IDs we need (400 max) - increased for CPU load testing!
+	maxToCheck := 1000
+	allIDs := api.store.GetLimitedProductIDs(maxToCheck)
 
 	var matches []Product
 	totalFound := 0
 	productsChecked := 0
-	maxToCheck := 100
-	maxResults := 20
+	maxResults := 100
 
-	// Check exactly 100 products then stop
+	// Check the limited set of products - no need for break condition
 	for _, id := range allIDs {
-		if productsChecked >= maxToCheck {
-			break
-		}
 
 		productsChecked++
+
+		// CPU-intensive operations for load testing
+		var result float64
+		for i := 0; i < 1000; i++ {
+			result += float64(id) * 3.14159 / float64(i+1)
+		}
 
 		product, exists := api.store.GetProduct(id)
 		if !exists {
@@ -134,8 +136,8 @@ func (api *ProductAPI) SearchProducts(c *gin.Context) {
 	// Calculate search time
 	searchTime := time.Since(startTime).Round(time.Millisecond)
 
-	log.Printf("✅ Search completed: query='%s' | checked=%d/%d | found=%d | returned=%d | time=%v",
-		query, productsChecked, maxToCheck, totalFound, len(matches), searchTime)
+	// log.Printf("✅ Search completed: query='%s' | checked=%d/%d | found=%d | returned=%d | time=%v",
+	// 	query, productsChecked, maxToCheck, totalFound, len(matches), searchTime)
 
 	response := SearchResponse{
 		Products:   matches,

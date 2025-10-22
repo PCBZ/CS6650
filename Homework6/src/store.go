@@ -46,6 +46,23 @@ func (ps *ProductStore) GetAllProductIDs() []int32 {
 	return ids
 }
 
+// GetLimitedProductIDs returns a slice of up to maxCount product IDs for efficient iteration
+func (ps *ProductStore) GetLimitedProductIDs(maxCount int) []int32 {
+	var ids []int32
+	count := 0
+	ps.products.Range(func(key, value interface{}) bool {
+		if count >= maxCount {
+			return false // Stop iteration
+		}
+		if id, ok := key.(int32); ok {
+			ids = append(ids, id)
+			count++
+		}
+		return true
+	})
+	return ids
+}
+
 // GetProductsCount returns the total number of products in the store
 func (ps *ProductStore) GetProductsCount() int {
 	count := 0

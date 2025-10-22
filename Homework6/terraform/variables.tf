@@ -28,13 +28,13 @@ variable "ecs_count" {
 # CPU and Memory settings for Fargate
 variable "cpu" {
   type        = string
-  default     = "256"  # 256 CPU units (0.25 vCPU)
+  default     = "256"  # 512 CPU units (0.5 vCPU)
   description = "vCPU units for Fargate task"
 }
 
 variable "memory" {
   type        = string
-  default     = "512"  # 512 MB
+  default     = "512"  # 1024 MB
   description = "Memory (MiB) for Fargate task"
 }
 
@@ -47,13 +47,13 @@ variable "min_capacity" {
 
 variable "max_capacity" {
   type        = number
-  default     = 8
+  default     = 4
   description = "Maximum number of ECS tasks"
 }
 
 variable "target_cpu_utilization" {
   type        = number
-  default     = 50
+  default     = 70
   description = "Target CPU utilization percentage for auto scaling"
 }
 
