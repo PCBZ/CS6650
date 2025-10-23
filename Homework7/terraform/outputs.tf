@@ -43,3 +43,19 @@ output "sqs_queue_arn" {
   description = "ARN of the SQS queue for order processing"
   value       = module.messaging.sqs_queue_arn
 }
+
+# Order Processor outputs
+output "processor_service_name" {
+  description = "Order processor service name"
+  value       = module.ecs.processor_service_name
+}
+
+output "processor_service_arn" {
+  description = "Order processor service ARN"
+  value       = module.ecs.processor_service_arn
+}
+
+output "processor_ecr_url" {
+  description = "ECR repository URL for order processor"
+  value       = module.ecr_processor.repository_url
+}

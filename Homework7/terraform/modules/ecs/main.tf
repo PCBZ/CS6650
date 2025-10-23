@@ -114,3 +114,79 @@ resource "aws_appautoscaling_policy" "scale_up" {
     }
   }
 }
+
+# =====================================================================
+# Order Processor Service (SQS Consumer)
+# =====================================================================
+
+# Order Processor Task Definition
+resource "aws_ecs_task_definition" "processor" {
+  count                    = var.enable_processor ? 1 : 0
+  family                   = "${var.service_name}-processor-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.processor_cpu
+  memory                   = var.processor_memory
+
+  execution_role_arn = var.execution_role_arn
+  task_role_arn      = var.task_role_arn
+
+  # Force task definition update when image changes
+  tags = {
+    ImageDigest = var.processor_image_digest
+    LastUpdated = timestamp()
+  }
+
+  container_definitions = jsonencode([{
+    name      = "${var.service_name}-processor-container"
+    image     = var.processor_image
+    essential = true
+
+    environment = [
+      {
+        name  = "AWS_REGION"
+        value = var.region
+      },
+      {
+        name  = "SQS_QUEUE_URL"
+        value = var.sqs_queue_url
+      },
+      {
+        name  = "NUM_WORKERS"
+        value = tostring(var.num_workers)
+      }
+    ]
+
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = var.log_group_name
+        "awslogs-region"        = var.region
+        "awslogs-stream-prefix" = "processor"
+      }
+    }
+  }])
+}
+
+# Order Processor ECS Service (no load balancer, just background worker)
+resource "aws_ecs_service" "processor" {
+  count           = var.enable_processor ? 1 : 0
+  name            = "${var.service_name}-processor"
+  cluster         = aws_ecs_cluster.this.id
+  task_definition = aws_ecs_task_definition.processor[0].arn
+  desired_count   = var.processor_count
+  launch_type     = "FARGATE"
+
+  # Speed up destroy process
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets          = var.subnet_ids
+    security_groups  = var.security_group_ids
+    assign_public_ip = false
+  }
+
+  # No load balancer needed for background processor
+}
+

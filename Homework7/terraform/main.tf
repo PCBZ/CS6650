@@ -11,6 +11,12 @@ module "ecr" {
   repository_name = var.ecr_repository_name
 }
 
+# ECR repository for order processor
+module "ecr_processor" {
+  source          = "./modules/ecr"
+  repository_name = "${var.ecr_repository_name}-processor"
+}
+
 module "logging" {
   source            = "./modules/logging"
   service_name      = var.service_name
@@ -60,8 +66,18 @@ module "ecs" {
   target_cpu_utilization = var.target_cpu_utilization
   enable_autoscaling     = false
   sns_topic_arn          = module.messaging.sns_topic_arn
+  
+  # Order processor configuration
+  enable_processor       = true
+  processor_image        = "${module.ecr_processor.repository_url}:latest"
+  processor_image_digest = docker_image.processor.repo_digest
+  sqs_queue_url          = module.messaging.sqs_queue_url
+  processor_count        = var.processor_count
+  processor_cpu          = var.processor_cpu
+  processor_memory       = var.processor_memory
+  num_workers            = var.num_workers
 
-  depends_on = [module.alb, docker_registry_image.app]
+  depends_on = [module.alb, docker_registry_image.app, docker_registry_image.processor]
 }
 
 
@@ -90,4 +106,25 @@ resource "docker_image" "app" {
 resource "docker_registry_image" "app" {
   # this will push :latest → ECR
   name = docker_image.app.name
+}
+
+// Build & push the order processor image into ECR
+resource "docker_image" "processor" {
+  name = "${module.ecr_processor.repository_url}:latest"
+  
+  triggers = {
+    build_time = timestamp()
+  }
+
+  build {
+    context    = "../src"
+    dockerfile = "Dockerfile.processor"
+    platform   = "linux/amd64"
+    remove     = true
+    no_cache   = true
+  }
+}
+
+resource "docker_registry_image" "processor" {
+  name = docker_image.processor.name
 }

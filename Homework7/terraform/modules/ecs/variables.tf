@@ -102,3 +102,51 @@ variable "sns_topic_arn" {
   description = "ARN of SNS topic for async order processing"
   default     = ""
 }
+
+variable "sqs_queue_url" {
+  type        = string
+  description = "URL of SQS queue for order processing"
+  default     = ""
+}
+
+variable "processor_image" {
+  type        = string
+  description = "ECR image URI for order processor (with tag)"
+  default     = ""
+}
+
+variable "processor_image_digest" {
+  type        = string
+  description = "Docker image digest for processor to force redeployment"
+  default     = ""
+}
+
+variable "enable_processor" {
+  type        = bool
+  description = "Enable the order processor service"
+  default     = true
+}
+
+variable "processor_count" {
+  type        = number
+  description = "Number of order processor tasks to run"
+  default     = 2
+}
+
+variable "processor_cpu" {
+  type        = string
+  default     = "256"
+  description = "vCPU units for processor"
+}
+
+variable "processor_memory" {
+  type        = string
+  default     = "512"
+  description = "Memory (MiB) for processor"
+}
+
+variable "num_workers" {
+  type        = number
+  description = "Number of SQS polling workers per processor task"
+  default     = 5
+}
