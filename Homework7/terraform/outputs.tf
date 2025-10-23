@@ -27,3 +27,19 @@ output "search_api_example" {
   description = "Example search API URL"
   value       = "http://${module.alb.alb_dns_name}/v1/products/search?q=Alpha"
 }
+
+# Messaging outputs
+output "sns_topic_arn" {
+  description = "ARN of the SNS topic for order processing"
+  value       = module.messaging.sns_topic_arn
+}
+
+output "sqs_queue_url" {
+  description = "URL of the SQS queue for order processing"
+  value       = module.messaging.sqs_queue_url
+}
+
+output "sqs_queue_arn" {
+  description = "ARN of the SQS queue for order processing"
+  value       = module.messaging.sqs_queue_arn
+}

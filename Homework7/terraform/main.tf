@@ -17,6 +17,12 @@ module "logging" {
   retention_in_days = var.log_retention_days
 }
 
+# SNS/SQS for async order processing
+module "messaging" {
+  source       = "./modules/messaging"
+  service_name = var.service_name
+}
+
 # Reuse an existing IAM role for ECS tasks
 data "aws_iam_role" "lab_role" {
   name = "LabRole"
