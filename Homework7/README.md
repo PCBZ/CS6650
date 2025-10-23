@@ -8,6 +8,10 @@
 Reaching **700 users** triggered failed requests.  
 <img width="2928" height="1800" alt="total_requests_per_second_1761192597 164" src="https://github.com/user-attachments/assets/61920804-9de0-4e50-8e20-ff2ad1501890" />
 
+## Phase 2
+With 700 users: Maximum thourghput = 233 orders/sec, orders lost.
+If demanding 700 users, it will lose 147 orders/sec.
+
 
 
 
