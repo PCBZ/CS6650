@@ -5,7 +5,7 @@ import (
 )
 
 // SetupRouter configures and returns the main Gin router
-func SetupRouter() *gin.Engine {
+func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI) *gin.Engine {
 	// Set gin mode
 	gin.SetMode(gin.ReleaseMode)
 
@@ -20,26 +20,25 @@ func SetupRouter() *gin.Engine {
 	})
 
 	// Setup API v1 routes
-	setupV1Routes(router)
+	setupV1Routes(router, orderAPI, productAPI)
 
 	return router
 }
 
 // setupV1Routes configures all v1 API routes
-func setupV1Routes(router *gin.Engine) {
+func setupV1Routes(router *gin.Engine, orderAPI *OrderAPI, productAPI *ProductAPI) {
 	v1 := router.Group("/v1")
 	{
 		// Products domain routes
-		setupProductsRoutes(v1)
+		setupProductsRoutes(v1, productAPI)
 		// Orders domain routes
-		setupOrdersRoutes(v1)
+		setupOrdersRoutes(v1, orderAPI)
 	}
 }
 
 // setupProductsRoutes configures product-related routes
-func setupProductsRoutes(rg *gin.RouterGroup) {
+func setupProductsRoutes(rg *gin.RouterGroup, productAPI *ProductAPI) {
 	products := rg.Group("/products")
-	productAPI := NewProductAPI()
 	{
 		products.GET("/search", productAPI.SearchProducts)
 		products.GET("/:productId", productAPI.GetProduct)
@@ -48,12 +47,13 @@ func setupProductsRoutes(rg *gin.RouterGroup) {
 }
 
 // setupOrdersRoutes configures order-related routes
-func setupOrdersRoutes(rg *gin.RouterGroup) {
+func setupOrdersRoutes(rg *gin.RouterGroup, orderAPI *OrderAPI) {
 	orders := rg.Group("/orders")
-	orderAPI := NewOrderAPI()
 	{
 		// Synchronous order processing endpoint (Phase 1)
 		orders.POST("/sync", orderAPI.ProcessOrderSync)
+		// Asynchronous order processing endpoint (Phase 3)
+		orders.POST("/async", orderAPI.ProcessOrderAsync)
 		// Statistics for monitoring during load tests
 		orders.GET("/stats", orderAPI.GetOrderStats)
 	}

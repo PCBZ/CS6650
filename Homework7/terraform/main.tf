@@ -59,6 +59,7 @@ module "ecs" {
   max_capacity           = var.max_capacity
   target_cpu_utilization = var.target_cpu_utilization
   enable_autoscaling     = false
+  sns_topic_arn          = module.messaging.sns_topic_arn
 
   depends_on = [module.alb, docker_registry_image.app]
 }

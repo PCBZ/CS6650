@@ -25,6 +25,17 @@ resource "aws_ecs_task_definition" "this" {
     image     = var.image
     essential = true
 
+    environment = [
+      {
+        name  = "AWS_REGION"
+        value = var.region
+      },
+      {
+        name  = "SNS_TOPIC_ARN"
+        value = var.sns_topic_arn
+      }
+    ]
+
     portMappings = [{
       containerPort = var.container_port
     }]

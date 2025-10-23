@@ -11,7 +11,8 @@ import (
 
 // OrderAPI contains all order-related business logic
 type OrderAPI struct {
-	store *OrderStore
+	store     *OrderStore
+	publisher *SNSPublisher
 }
 
 // generateSimpleUUID creates a simple UUID-like string
@@ -22,9 +23,10 @@ func generateSimpleUUID() string {
 }
 
 // NewOrderAPI returns a new instance of OrderAPI
-func NewOrderAPI() *OrderAPI {
+func NewOrderAPI(publisher *SNSPublisher) *OrderAPI {
 	return &OrderAPI{
-		store: orderStore,
+		store:     orderStore,
+		publisher: publisher,
 	}
 }
 
@@ -74,6 +76,63 @@ func (api *OrderAPI) ProcessOrderSync(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// ProcessOrderAsync handles POST /orders/async - asynchronous order processing
+func (api *OrderAPI) ProcessOrderAsync(c *gin.Context) {
+	// Parse request body
+	var order Order
+	if err := c.ShouldBindJSON(&order); err != nil {
+		c.JSON(http.StatusBadRequest, NewInvalidInputError(err.Error()))
+		return
+	}
+
+	// Generate order ID if not provided
+	if order.OrderID == "" {
+		order.OrderID = generateSimpleUUID()
+	}
+
+	// Set initial status and timestamp
+	order.Status = "pending"
+	order.CreatedAt = time.Now()
+
+	// Validate the order
+	if err := order.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// Store order as pending
+	api.store.SetOrder(order.OrderID, &order)
+
+	// Publish order to SNS topic (non-blocking)
+	if api.publisher != nil {
+		if err := api.publisher.PublishOrder(&order); err != nil {
+			// If publishing fails, mark order as failed
+			order.Status = "failed"
+			api.store.SetOrder(order.OrderID, &order)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to queue order for processing",
+			})
+			return
+		}
+	} else {
+		// If publisher is not initialized, return error
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Async processing is not available",
+		})
+		return
+	}
+
+	// Return 202 Accepted immediately (order is queued, not processed yet)
+	response := OrderResponse{
+		OrderID:   order.OrderID,
+		Status:    order.Status,
+		Message:   "Order accepted and queued for processing",
+		Timestamp: time.Now().Format(time.RFC3339),
+	}
+
+	c.JSON(http.StatusAccepted, response)
 }
 
 // GetOrderStats handles GET /orders/stats - for monitoring during load tests

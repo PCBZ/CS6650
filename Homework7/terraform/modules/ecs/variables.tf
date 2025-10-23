@@ -96,3 +96,9 @@ variable "target_cpu_utilization" {
   description = "Target CPU utilization percentage"
   default     = 70
 }
+
+variable "sns_topic_arn" {
+  type        = string
+  description = "ARN of SNS topic for async order processing"
+  default     = ""
+}
