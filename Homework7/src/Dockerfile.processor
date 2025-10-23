@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -9,8 +9,8 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Copy source code
-COPY . .
+# Copy processor source code
+COPY processor/orderProcessor.go ./
 
 # Build the order processor binary
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o orderProcessor orderProcessor.go
