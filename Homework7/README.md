@@ -391,5 +391,7 @@ module "lambda" {
 
 ### Observe Lambda Logs
 <img width="1198" height="77" alt="image" src="https://github.com/user-attachments/assets/c4c3bf01-ea33-4177-bd48-6de9aea20b40" />
-<img width="1191" height="81" alt="image" src="https://github.com/user-attachments/assets/3327742b-5717-4d09-ad30-931091893e61" />
+<img width="1211" height="84" alt="image" src="https://github.com/user-attachments/assets/637432c2-e4af-41fb-92d2-085733e2094c" />
+
+
 
