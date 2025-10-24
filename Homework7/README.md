@@ -1,6 +1,120 @@
 # Homework 7
 
 ## Phase 1
+### Sync EndPoint
+```go
+func (api *OrderAPI) ProcessOrderSync(c *gin.Context) {
+	// Parse request body
+	var order Order
+	if err := c.ShouldBindJSON(&order); err != nil {
+		c.JSON(http.StatusBadRequest, NewInvalidInputError(err.Error()))
+		return
+	} // Generate order ID if not provided
+	if order.OrderID == "" {
+		order.OrderID = generateSimpleUUID()
+	}
+
+	// Set initial status and timestamp
+	order.Status = "pending"
+	order.CreatedAt = time.Now()
+
+	// Validate the order
+	if err := order.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// Store order as pending
+	api.store.SetOrder(order.OrderID, &order)
+
+	// Update status to processing
+	order.Status = "processing"
+	api.store.SetOrder(order.OrderID, &order)
+
+	// **CRITICAL: Simulate payment verification (3 seconds delay)**
+	// This is where the bottleneck happens during flash sales!
+	time.Sleep(3 * time.Second)
+
+	// Update status to completed
+	order.Status = "completed"
+	api.store.SetOrder(order.OrderID, &order)
+
+	// Return success response
+	response := OrderResponse{
+		OrderID:   order.OrderID,
+		Status:    order.Status,
+		Message:   "Order processed successfully",
+		Timestamp: time.Now().Format(time.RFC3339),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+```
+
+### VPC Setting
+```terraform
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "${var.service_name}-vpc"
+  }
+}
+
+# Create public subnets
+resource "aws_subnet" "public" {
+  count                   = 2
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.${count.index + 1}.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.service_name}-public-subnet-${count.index + 1}"
+    Type = "public"
+  }
+}
+
+# Create private subnets
+resource "aws_subnet" "private" {
+  count             = 2
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.${count.index + 10}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "${var.service_name}-private-subnet-${count.index + 1}"
+    Type = "private"
+  }
+}
+```
+
+### ALB Setting
+```terraform
+# Target Group for Fargate tasks
+resource "aws_lb_target_group" "this" {
+  name                 = "${var.service_name}-tg"
+  port                 = var.container_port
+  protocol             = "HTTP"
+  vpc_id               = var.vpc_id
+  target_type          = "ip"  # Required for Fargate
+  deregistration_delay = 30     # Reduce from default 300s to 30s
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = var.health_check_path
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 2
+  }
+```
+
 ### Normal Operation
 <img width="2928" height="1800" alt="total_requests_per_second_1761167543 74" src="https://github.com/user-attachments/assets/4e1439e5-c142-4d5b-83dd-6814a70eb0ca" />
 
@@ -146,7 +260,27 @@ func (op *OrderProcessor) processMessage(workerID int, message types.Message) {
 **5 users**
 <img width="2928" height="1800" alt="total_requests_per_second_1761254470 797" src="https://github.com/user-attachments/assets/7555775f-1be7-4c0e-8c57-60dd316466e5" />
 
-**40 users**
+**700 users**
 <img width="2928" height="1800" alt="total_requests_per_second_1761254882 821" src="https://github.com/user-attachments/assets/4fc3651e-92fe-48ef-abe2-04bfbfb0c91c" />
 
+## Phase 4
+<img width="1211" height="416" alt="image" src="https://github.com/user-attachments/assets/b9f35cea-ff02-422e-844e-0319328364ce" />
+Queue Growth Rate = 46 messages/sec
+For 700 users requests, it will never empty the queue; If it stops at 39k messages in the queue, it will consume 32.8 hours
+
+## Phase 5
+**5 goroutines**
+<img width="1196" height="108" alt="image" src="https://github.com/user-attachments/assets/2cda1843-3852-4305-bd10-e93980f99a52" />
+
+<img width="2928" height="1800" alt="total_requests_per_second_1761263001 924" src="https://github.com/user-attachments/assets/b3a32fa4-6189-4e81-b7fa-82458babaeb9" />  
+**10 goroutines**  
+[<img width="2928" height="1800" alt="total_requests_per_second_1761265177 282" src="https://github.com/user-attachments/assets/30913d82-47c2-4a7a-9142-ffbc4aac929b" />](http://order-processing-service-alb-700972238.us-west-2.elb.amazonaws.com)
+
+<img width="1201" height="146" alt="image" src="https://github.com/user-attachments/assets/c309060f-eba6-431b-bb63-924c1249db59" />
+
+
+| goroutine count | orders/sec | queue growth rate(messages/sec) |
+| --------------- | ---------- | ------------------------------- |
+| 5  | 70 | 1.4 |
+| 20 | 60 | steady ｜
 
