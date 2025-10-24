@@ -1,7 +1,8 @@
 # Homework 7
 
-## Phase 1
-### Sync EndPoint
+## SNS & SQS
+### Phase 1
+#### Sync EndPoint
 ```go
 func (api *OrderAPI) ProcessOrderSync(c *gin.Context) {
 	// Parse request body
@@ -51,7 +52,7 @@ func (api *OrderAPI) ProcessOrderSync(c *gin.Context) {
 }
 ```
 
-### VPC Setting
+#### VPC Setting
 ```terraform
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -91,7 +92,7 @@ resource "aws_subnet" "private" {
 }
 ```
 
-### ALB Setting
+#### ALB Setting
 ```terraform
 # Target Group for Fargate tasks
 resource "aws_lb_target_group" "this" {
@@ -115,19 +116,19 @@ resource "aws_lb_target_group" "this" {
   }
 ```
 
-### Normal Operation
+#### Normal Operation
 <img width="2928" height="1800" alt="total_requests_per_second_1761167543 74" src="https://github.com/user-attachments/assets/4e1439e5-c142-4d5b-83dd-6814a70eb0ca" />
 
-### Test Flash Sale
+#### Test Flash Sale
 Reaching **700 users** triggered failed requests.  
 <img width="2928" height="1800" alt="total_requests_per_second_1761192597 164" src="https://github.com/user-attachments/assets/61920804-9de0-4e50-8e20-ff2ad1501890" />
 
-## Phase 2
+### Phase 2
 With 700 users: Maximum thourghput = 233 orders/sec, orders lost.
 If demanding 700 users, it will lose 147 orders/sec.
 
-## Phase 3
-### Step 1. Add SNS/SQS Infrastructure
+### Phase 3
+#### Step 1. Add SNS/SQS Infrastructure
 ```terraform
 # SNS Topic for order processing events
 resource "aws_sns_topic" "order_processing" {
@@ -151,7 +152,7 @@ resource "aws_sqs_queue" "order_processing" {
 }
 ```
 
-### Step 2. Add Async EndPoint
+#### Step 2. Add Async EndPoint
 ```go
 // ProcessOrderAsync handles POST /orders/async - asynchronous order processing
 func (api *OrderAPI) ProcessOrderAsync(c *gin.Context) {
@@ -189,7 +190,7 @@ func (api *OrderAPI) ProcessOrderAsync(c *gin.Context) {
 }
 ```
 
-### Step 3. Add Order Processor
+#### Step 3. Add Order Processor
 ```go
 // receiveAndProcessMessages receives messages from SQS and processes them
 func (op *OrderProcessor) receiveAndProcessMessages(workerID int) {
@@ -263,12 +264,12 @@ func (op *OrderProcessor) processMessage(workerID int, message types.Message) {
 **700 users**
 <img width="2928" height="1800" alt="total_requests_per_second_1761254882 821" src="https://github.com/user-attachments/assets/4fc3651e-92fe-48ef-abe2-04bfbfb0c91c" />
 
-## Phase 4
+### Phase 4
 <img width="1211" height="416" alt="image" src="https://github.com/user-attachments/assets/b9f35cea-ff02-422e-844e-0319328364ce" />
 Queue Growth Rate = 46 messages/sec
 For 700 users requests, it will never empty the queue; If it stops at 39k messages in the queue, it will consume 32.8 hours
 
-## Phase 5
+### Phase 5
 **5 goroutines**
 <img width="1196" height="108" alt="image" src="https://github.com/user-attachments/assets/2cda1843-3852-4305-bd10-e93980f99a52" />
 
@@ -283,4 +284,112 @@ For 700 users requests, it will never empty the queue; If it stops at 39k messag
 | --------------- | ---------- | ------------------------------- |
 | 5  | 70 | 1.4 |
 | 20 | 60 | steady ｜
+
+## Lambda
+### Deploy Lambda Function
+#### Lambda Function
+```go
+// handleSNSEvent processes SNS messages triggered by Lambda
+func handleSNSEvent(ctx context.Context, snsEvent events.SNSEvent) error {
+	for _, record := range snsEvent.Records {
+		snsRecord := record.SNS
+
+		// Parse the order message from SNS
+		var order OrderMessage
+		if err := json.Unmarshal([]byte(snsRecord.Message), &order); err != nil {
+			log.Printf("Error parsing order: %v", err)
+			continue
+		}
+
+		// Simulate payment processing (3 seconds delay)
+		if err := processPayment(order); err != nil {
+			log.Printf("Payment failed for order %s: %v", order.OrderID, err)
+			continue
+		}
+	}
+
+	return nil
+}
+
+// processPayment simulates payment processing with 3-second delay
+func processPayment(order OrderMessage) error {
+	// Simulate payment processing time (3 seconds)
+	time.Sleep(3 * time.Second)
+
+	// Silent processing - no logs for production
+	return nil
+}
+
+func main() {
+	lambda.Start(handleSNSEvent)
+	fmt.Println("Lambda function started")
+}
+```
+
+#### Build .zip
+```bash
+set -e
+
+echo "🔨 Building Lambda function..."
+
+# Clean previous builds
+rm -f bootstrap bootstrap.zip
+
+# Download dependencies
+go mod download
+
+# Build for Linux AMD64 (Lambda runtime)
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o bootstrap main.go
+
+# Create deployment package
+zip bootstrap.zip bootstrap
+
+echo "✅ Build complete: bootstrap.zip"
+echo "📦 File size: $(ls -lh bootstrap.zip | awk '{print $5}')"
+```
+
+#### Deploy via Terraform
+```terraform
+# Lambda function
+resource "aws_lambda_function" "order_processor" {
+  count         = var.enable_lambda ? 1 : 0
+  filename      = "${path.module}/../../src/lambda/bootstrap.zip"
+  function_name = "${var.service_name}-order-processor-lambda"
+  role          = aws_iam_role.lambda_execution.arn
+  handler       = "bootstrap"
+  runtime       = "provided.al2"  # Go runtime
+  memory_size   = 512              # 512MB as required
+  timeout       = 30               # 30 seconds (needs time for 3-second processing)
+
+  source_code_hash = filebase64sha256("${path.module}/../../src/lambda/bootstrap.zip")
+
+  environment {
+    variables = {
+      AWS_REGION = var.region
+    }
+  }
+
+  tags = {
+    Name = "${var.service_name}-order-processor-lambda"
+  }
+}
+```
+
+```terraform
+module "lambda" {
+  source             = "./modules/lambda"
+  service_name       = var.service_name
+  region             = var.aws_region
+  sns_topic_arn      = module.messaging.sns_topic_arn
+  enable_lambda      = var.enable_lambda
+  log_retention_days = var.log_retention_days
+}
+```
+
+### Send Test Requests
+<img width="1072" height="645" alt="image" src="https://github.com/user-attachments/assets/511557f5-931d-490d-82dc-ef8d0e41a7b5" />
+
+### Observe Lambda Logs
+<img width="1198" height="77" alt="image" src="https://github.com/user-attachments/assets/c4c3bf01-ea33-4177-bd48-6de9aea20b40" />
+<img width="1191" height="81" alt="image" src="https://github.com/user-attachments/assets/3327742b-5717-4d09-ad30-931091893e61" />
 
