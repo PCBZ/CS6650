@@ -59,3 +59,14 @@ output "processor_ecr_url" {
   description = "ECR repository URL for order processor"
   value       = module.ecr_processor.repository_url
 }
+
+# Lambda outputs
+output "lambda_function_name" {
+  description = "Lambda function name for order processing"
+  value       = module.lambda.lambda_function_name
+}
+
+output "lambda_function_arn" {
+  description = "Lambda function ARN for order processing"
+  value       = module.lambda.lambda_function_arn
+}

@@ -80,6 +80,15 @@ module "ecs" {
   depends_on = [module.alb, docker_registry_image.app, docker_registry_image.processor]
 }
 
+# Lambda function for order processing (alternative to ECS processor)
+module "lambda" {
+  source             = "./modules/lambda"
+  service_name       = var.service_name
+  region             = var.aws_region
+  sns_topic_arn      = module.messaging.sns_topic_arn
+  enable_lambda      = var.enable_lambda
+  log_retention_days = var.log_retention_days
+}
 
 // Build & push the Go app image into ECR
 resource "docker_image" "app" {
