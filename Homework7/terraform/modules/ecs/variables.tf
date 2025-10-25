@@ -144,9 +144,3 @@ variable "processor_memory" {
   default     = "512"
   description = "Memory (MiB) for processor"
 }
-
-variable "num_workers" {
-  type        = number
-  description = "Number of SQS polling workers per processor task"
-  default     = 5
-}

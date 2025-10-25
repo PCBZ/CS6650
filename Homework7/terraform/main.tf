@@ -75,7 +75,6 @@ module "ecs" {
   processor_count        = var.processor_count
   processor_cpu          = var.processor_cpu
   processor_memory       = var.processor_memory
-  num_workers            = var.num_workers
 
   depends_on = [module.alb, docker_registry_image.app, docker_registry_image.processor]
 }

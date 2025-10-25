@@ -153,7 +153,7 @@ resource "aws_ecs_task_definition" "processor" {
       },
       {
         name  = "NUM_WORKERS"
-        value = tostring(var.num_workers)
+        value = "5"
       }
     ]
 

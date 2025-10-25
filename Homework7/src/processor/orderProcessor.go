@@ -100,7 +100,6 @@ func (op *OrderProcessor) receiveAndProcessMessages(workerID int) {
 
 	if err != nil {
 		log.Printf("Worker %d: Error receiving messages: %v", workerID, err)
-		time.Sleep(5 * time.Second) // Back off on error
 		return
 	}
 
@@ -121,6 +120,8 @@ func (op *OrderProcessor) receiveAndProcessMessages(workerID int) {
 
 	processingWg.Wait()
 }
+
+var paymentSemaphore = make(chan struct{}, 5) // Limit to 5 concurrent payments
 
 // processMessage processes a single SQS message
 func (op *OrderProcessor) processMessage(workerID int, message types.Message) {
@@ -162,13 +163,14 @@ func (op *OrderProcessor) processMessage(workerID int, message types.Message) {
 
 // processPayment simulates payment processing
 func (op *OrderProcessor) processPayment(order OrderMessage) error {
+	// Acquire semaphore slot (blocks if 5 concurrent payments already running)
+	paymentSemaphore <- struct{}{}
+	defer func() {
+		<-paymentSemaphore // Release semaphore slot
+	}()
+
 	// Simulate payment processing time (3 seconds)
 	time.Sleep(3 * time.Second)
-
-	// Simulate a 5% failure rate for demonstration
-	if order.OrderID%20 == 0 {
-		return fmt.Errorf("payment gateway timeout")
-	}
 
 	return nil
 }

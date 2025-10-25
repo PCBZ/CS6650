@@ -30,6 +30,8 @@ func NewOrderAPI(publisher *SNSPublisher) *OrderAPI {
 	}
 }
 
+var paymentSemaphore = make(chan struct{}, 5) // Limit to 5 concurrent sync orders
+
 // ProcessOrderSync handles POST /orders/sync - synchronous order processing
 func (api *OrderAPI) ProcessOrderSync(c *gin.Context) {
 	// Parse request body
@@ -59,9 +61,7 @@ func (api *OrderAPI) ProcessOrderSync(c *gin.Context) {
 	order.Status = "processing"
 	api.store.SetOrder(order.OrderID, &order)
 
-	// **CRITICAL: Simulate payment verification (3 seconds delay)**
-	// This is where the bottleneck happens during flash sales!
-	time.Sleep(3 * time.Second)
+	makePayment()
 
 	// Update status to completed
 	order.Status = "completed"
@@ -133,6 +133,17 @@ func (api *OrderAPI) ProcessOrderAsync(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, response)
+}
+
+func makePayment() {
+	// Acquire semaphore slot (blocks if 5 concurrent payments already running)
+	paymentSemaphore <- struct{}{}
+	defer func() {
+		<-paymentSemaphore // Release semaphore slot
+	}()
+
+	// Simulate payment processing time (3 seconds)
+	time.Sleep(3 * time.Second)
 }
 
 // GetOrderStats handles GET /orders/stats - for monitoring during load tests
