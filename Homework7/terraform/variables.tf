@@ -72,7 +72,7 @@ variable "log_retention_days" {
 # Order Processor settings
 variable "processor_count" {
   type        = number
-  default     = 0
+  default     = 1
   description = "Number of order processor tasks to run"
 }
 
@@ -90,13 +90,13 @@ variable "processor_memory" {
 
 variable "num_workers" {
   type        = number
-  default     = 1
+  default     = 5
   description = "Number of SQS polling workers per processor task"
 }
 
 # Lambda settings
 variable "enable_lambda" {
   type        = bool
-  default     = true
+  default     = false
   description = "Enable Lambda function for order processing (alternative to ECS processor)"
 }
