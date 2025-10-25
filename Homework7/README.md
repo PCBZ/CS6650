@@ -393,5 +393,11 @@ module "lambda" {
 <img width="1198" height="77" alt="image" src="https://github.com/user-attachments/assets/c4c3bf01-ea33-4177-bd48-6de9aea20b40" />
 <img width="1211" height="84" alt="image" src="https://github.com/user-attachments/assets/637432c2-e4af-41fb-92d2-085733e2094c" />
 
+### Decision
+If it promises to have 10,000 orders/month, using ECS vs. Lamnda will costs $17 and 0$. Assuming $5 profit every order will get,  
+```
+17 ÷ (10,000 × 5) = 17 ÷ 50,000 = 0.00034 = 0.034%
+```
+0.034% order lost will loss $17 a month. 0.034% is an extremly narrow margin, losing 3-4 orders a month eliminates the cost of ECS. Current system successfully recovered from a 50,000 message backlog with zero message loss, maintained stable processing rates over extended periods, and showed resilience under heavy load conditions. Cold starts, timeout issues, and configuration errors could easily push failure rates above the 0.034% threshold. For a startup where every customer and order matters, the guaranteed processing reliability of ECS provides better user experience than Lambda's cost savings. 
 
 
