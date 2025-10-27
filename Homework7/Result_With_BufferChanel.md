@@ -260,27 +260,33 @@ func (op *OrderProcessor) processMessage(workerID int, message types.Message) {
 ```
 
 **100 users**
-<img width="2928" height="1800" alt="total_requests_per_second_1761425660 039" src="https://github.com/user-attachments/assets/b5ce1e13-e2e5-4a19-888f-85c86bec5eab" />
+<img width="2928" height="1800" alt="total_requests_per_second_1761534215 376" src="https://github.com/user-attachments/assets/1c131f74-abea-44fa-8f53-0f6bfc779d2d" />
+
 
 ### Phase 4
-<img width="1224" height="133" alt="image" src="https://github.com/user-attachments/assets/11c31a1e-e2b5-4951-a636-f4630eb6a502" />
-Queue Growth Rate = 5.43 messages/sec
-For 100 users requests, it will never empty the queue; If it stops at 5.3k messages in the queue, it will consume 1.3 hours
+<img width="1198" height="182" alt="image" src="https://github.com/user-attachments/assets/86ef53b4-99e9-4452-a8c4-fca15fd25b7e" />
+Queue Growth Rate = 13 messages/sec
+For 100 users requests, it will never empty the queue; If it stops at 26.8k messages in the queue, it will consume 3.7 hours
 
 ### Phase 5
 **5 goroutines**
-<img width="1217" height="134" alt="image" src="https://github.com/user-attachments/assets/4eaa2f33-ac76-4275-841c-4069707286d2" />
+<img width="1208" height="161" alt="image" src="https://github.com/user-attachments/assets/6d4f1e0c-fd3c-4dd5-a6ea-8e38016027fa" />
 
-<img width="2928" height="1800" alt="total_requests_per_second_1761422557 291" src="https://github.com/user-attachments/assets/3ce31f98-3674-46c8-b2b9-e633d82365b0" />
+**20 goroutines**  
+<img width="1202" height="153" alt="image" src="https://github.com/user-attachments/assets/d1c54f97-a03c-4148-9ab1-bf856568a659" />
 
- 
-**10 goroutines**  
-<img width="1207" height="157" alt="image" src="https://github.com/user-attachments/assets/f1d4fdf9-c2a1-4070-b845-bd8ef73bb838" />
+**100 goroutines**
+<img width="1225" height="188" alt="image" src="https://github.com/user-attachments/assets/7a3a2de5-0f6c-447b-8a84-4a3b36997fa5" />
 
-| goroutine count | peak depth | time to zero | CPU Utilization (%) |
-| --------------- | ---------- | --------------- | --- |
-| 5  | 2.2k | 13k | 100 |
-| 20 | 60 | steady ｜
+
+
+| goroutine count | peak depth | growth (message/sec) | time to zero | CPU Utilization (%) | 
+| --------------- | ---------- | ------ | --------------- | --- |
+| 1  | 28.9k | 13 | 3.7hour | 100 | 
+| 5  | 8.4k | 6.65 | 21min | 100 |
+| 20 | 7.3k | 8.73 | 18min | 100 |
+| 100 | 7.4k | 8.9 | 19min | 100 |
+
 
 ## Lambda
 ### Deploy Lambda Function
