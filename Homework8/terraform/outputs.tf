@@ -70,3 +70,25 @@ output "lambda_function_arn" {
   description = "Lambda function ARN for order processing"
   value       = module.lambda.lambda_function_arn
 }
+
+# RDS outputs
+output "db_endpoint" {
+  description = "RDS MySQL connection endpoint"
+  value       = module.rds.db_instance_endpoint
+  sensitive   = true
+}
+
+output "db_address" {
+  description = "RDS MySQL hostname"
+  value       = module.rds.db_instance_address
+}
+
+output "db_port" {
+  description = "RDS MySQL port"
+  value       = module.rds.db_instance_port
+}
+
+output "db_name" {
+  description = "RDS database name"
+  value       = module.rds.db_name
+}

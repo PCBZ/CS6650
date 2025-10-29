@@ -89,6 +89,18 @@ module "lambda" {
   log_retention_days = var.log_retention_days
 }
 
+# RDS MySQL Database
+module "rds" {
+  source                  = "./modules/rds"
+  service_name            = var.service_name
+  vpc_id                  = module.network.vpc_id
+  private_subnet_ids      = module.network.private_subnet_ids
+  ecs_security_group_ids  = [module.network.security_group_id]
+  database_name           = var.database_name
+  database_username       = var.database_username
+  database_password       = var.database_password
+}
+
 // Build & push the Go app image into ECR
 resource "docker_image" "app" {
   # Use the URL from the ecr module, and tag it "latest"

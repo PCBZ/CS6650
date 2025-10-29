@@ -1,0 +1,7 @@
+# Database Configuration
+# IMPORTANT: Set a secure password before deploying!
+database_password = "ChangeMe12345!"  # Must be at least 8 characters
+
+# Optional: Override defaults
+# database_name     = "orders_db"
+# database_username = "admin"

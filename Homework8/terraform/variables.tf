@@ -100,3 +100,23 @@ variable "enable_lambda" {
   default     = false
   description = "Enable Lambda function for order processing (alternative to ECS processor)"
 }
+
+# RDS Database settings
+variable "database_name" {
+  type        = string
+  default     = "orders_db"
+  description = "Name of the initial database"
+}
+
+variable "database_username" {
+  type        = string
+  default     = "admin"
+  description = "Master username for RDS"
+  sensitive   = true
+}
+
+variable "database_password" {
+  type        = string
+  description = "Master password for RDS (minimum 8 characters)"
+  sensitive   = true
+}
