@@ -283,7 +283,7 @@ For 700 users requests, it will never empty the queue; If it stops at 39k messag
 | goroutine count | orders/sec | queue growth rate(messages/sec) |
 | --------------- | ---------- | ------------------------------- |
 | 5  | 70 | 1.4 |
-| 20 | 60 | steady ｜
+| 20 | 60 | steady |
 
 ## Lambda
 ### Deploy Lambda Function
@@ -399,5 +399,6 @@ If it promises to have 10,000 orders/month, using ECS vs. Lamnda will costs $17 
 17 ÷ (10,000 × 5) = 17 ÷ 50,000 = 0.00034 = 0.034%
 ```
 0.034% order lost will loss $17 a month. 0.034% is an extremly narrow margin, losing 3-4 orders a month eliminates the cost of ECS. Current system successfully recovered from a 50,000 message backlog with zero message loss, maintained stable processing rates over extended periods, and showed resilience under heavy load conditions. Cold starts, timeout issues, and configuration errors could easily push failure rates above the 0.034% threshold. For a startup where every customer and order matters, the guaranteed processing reliability of ECS provides better user experience than Lambda's cost savings. 
+
 
 
