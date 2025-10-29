@@ -65,6 +65,27 @@ func NewProductNotFoundError(productID int32) ErrorResponse {
 	}
 }
 
+// === SHOPPING CART MODELS ===
+
+// ShoppingCart represents a shopping cart
+type ShoppingCart struct {
+	ShoppingCartID int                `json:"shopping_cart_id" db:"shopping_cart_id"`
+	CustomerID     int                `json:"customer_id" db:"customer_id"`
+	Status         string             `json:"status" db:"status"`
+	Items          []ShoppingCartItem `json:"items,omitempty" db:"-"`
+	CreatedAt      time.Time          `json:"created_at,omitempty" db:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at,omitempty" db:"updated_at"`
+}
+
+// ShoppingCartItem represents an item in a shopping cart
+type ShoppingCartItem struct {
+	CartItemID     int       `json:"cart_item_id" db:"cart_item_id"`
+	ShoppingCartID int       `json:"shopping_cart_id" db:"shopping_cart_id"`
+	ProductID      int       `json:"product_id" db:"product_id"`
+	Quantity       int       `json:"quantity" db:"quantity"`
+	AddedAt        time.Time `json:"added_at,omitempty" db:"added_at"`
+}
+
 // === ORDER MODELS ===
 
 // Item represents an item in an order
