@@ -153,7 +153,7 @@ resource "aws_ecs_task_definition" "processor" {
       },
       {
         name  = "NUM_WORKERS"
-        value = "1"
+        value = "100"
       }
     ]
 
