@@ -144,3 +144,35 @@ variable "processor_memory" {
   default     = "512"
   description = "Memory (MiB) for processor"
 }
+
+# Database configuration
+variable "db_host" {
+  type        = string
+  description = "RDS MySQL endpoint"
+  default     = ""
+}
+
+variable "db_port" {
+  type        = string
+  description = "RDS MySQL port"
+  default     = "3306"
+}
+
+variable "db_name" {
+  type        = string
+  description = "Database name"
+  default     = ""
+}
+
+variable "db_user" {
+  type        = string
+  description = "Database username"
+  default     = ""
+}
+
+variable "db_password" {
+  type        = string
+  description = "Database password"
+  sensitive   = true
+  default     = ""
+}

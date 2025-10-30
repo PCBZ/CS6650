@@ -8,8 +8,18 @@ output "db_instance_address" {
   value       = aws_db_instance.mysql.address
 }
 
+output "db_address" {
+  description = "Hostname of the RDS instance (alias)"
+  value       = aws_db_instance.mysql.address
+}
+
 output "db_instance_port" {
   description = "Port of the RDS instance"
+  value       = aws_db_instance.mysql.port
+}
+
+output "db_port" {
+  description = "Port of the RDS instance (alias)"
   value       = aws_db_instance.mysql.port
 }
 

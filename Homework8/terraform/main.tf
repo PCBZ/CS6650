@@ -76,7 +76,14 @@ module "ecs" {
   processor_cpu          = var.processor_cpu
   processor_memory       = var.processor_memory
 
-  depends_on = [module.alb, docker_registry_image.app, docker_registry_image.processor]
+  # Database configuration
+  db_host                = module.rds.db_address
+  db_port                = tostring(module.rds.db_port)
+  db_name                = module.rds.db_name
+  db_user                = var.database_username
+  db_password            = var.database_password
+
+  depends_on = [module.alb, docker_registry_image.app, docker_registry_image.processor, module.rds]
 }
 
 # Lambda function for order processing (alternative to ECS processor)
