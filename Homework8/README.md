@@ -127,5 +127,16 @@ A small number of create_cart API requests are slow, more than 100ms.
 <img width="743" height="357" alt="image" src="https://github.com/user-attachments/assets/44714373-f224-4195-9428-e26d593bf684" />
 <img width="1143" height="361" alt="image" src="https://github.com/user-attachments/assets/678a64b8-89f2-4487-9241-0d3c193670a0" />
 
+In-memory response time data:
+50th：36ms
+95th：76ms
+
+Database(MySql) response time data:
+50th: 40ms-50ms
+95th: 70ms
+
+It shows 2 implementations are similar. In-memory response time is a little better than database(MySql)
+
+
 
 
