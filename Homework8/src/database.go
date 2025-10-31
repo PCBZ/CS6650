@@ -61,7 +61,7 @@ func InitDatabase() (*gorm.DB, error) {
 	}
 
 	// Configure connection pool for 100 concurrent users
-	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxOpenConns(30)
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
