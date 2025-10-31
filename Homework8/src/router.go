@@ -5,7 +5,7 @@ import (
 )
 
 // SetupRouter configures and returns the main Gin router
-func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI) *gin.Engine {
+func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI *ShoppingCartAPI) *gin.Engine {
 	// Set gin mode
 	gin.SetMode(gin.ReleaseMode)
 
@@ -20,19 +20,21 @@ func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI) *gin.Engine {
 	})
 
 	// Setup API v1 routes
-	setupV1Routes(router, orderAPI, productAPI)
+	setupV1Routes(router, orderAPI, productAPI, cartAPI)
 
 	return router
 }
 
 // setupV1Routes configures all v1 API routes
-func setupV1Routes(router *gin.Engine, orderAPI *OrderAPI, productAPI *ProductAPI) {
+func setupV1Routes(router *gin.Engine, orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI *ShoppingCartAPI) {
 	v1 := router.Group("/v1")
 	{
 		// Products domain routes
 		setupProductsRoutes(v1, productAPI)
 		// Orders domain routes
 		setupOrdersRoutes(v1, orderAPI)
+		// Shopping carts domain routes
+		setupShoppingCartsRoutes(v1, cartAPI)
 	}
 }
 
@@ -56,5 +58,18 @@ func setupOrdersRoutes(rg *gin.RouterGroup, orderAPI *OrderAPI) {
 		orders.POST("/async", orderAPI.ProcessOrderAsync)
 		// Statistics for monitoring during load tests
 		orders.GET("/stats", orderAPI.GetOrderStats)
+	}
+}
+
+// setupShoppingCartsRoutes configures shopping cart-related routes
+func setupShoppingCartsRoutes(rg *gin.RouterGroup, cartAPI *ShoppingCartAPI) {
+	carts := rg.Group("/shopping-carts")
+	{
+		// Create new shopping cart
+		carts.POST("", cartAPI.CreateShoppingCart)
+		// Get shopping cart with all items
+		carts.GET("/:id", cartAPI.GetShoppingCart)
+		// Add or update item in cart
+		carts.POST("/:id/items", cartAPI.AddItemToCart)
 	}
 }

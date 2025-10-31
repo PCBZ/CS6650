@@ -6,15 +6,20 @@ import (
 )
 
 type Product struct {
-	ProductID    int32  `json:"product_id"`
-	SKU          string `json:"sku"`
-	Manufacturer string `json:"manufacturer"`
-	CategoryID   int32  `json:"category_id"`
-	Weight       int32  `json:"weight"`
-	SomeOtherID  int32  `json:"some_other_id"`
-	Category     string `json:"category"`
-	Description  string `json:"description"`
-	Brand        string `json:"brand"`
+	ProductID    int32  `json:"product_id" gorm:"column:product_id;primaryKey;autoIncrement"`
+	SKU          string `json:"sku" gorm:"column:sku;not null;unique;size:100"`
+	Manufacturer string `json:"manufacturer" gorm:"column:manufacturer;not null;size:200"`
+	CategoryID   int32  `json:"category_id" gorm:"column:category_id;not null"`
+	Weight       int32  `json:"weight" gorm:"column:weight;not null;comment:Weight in grams"`
+	SomeOtherID  int32  `json:"some_other_id" gorm:"column:some_other_id;not null"`
+	Category     string `json:"category" gorm:"column:category;size:100"`
+	Description  string `json:"description" gorm:"column:description;type:text"`
+	Brand        string `json:"brand" gorm:"column:brand;size:200"`
+}
+
+// TableName specifies the table name for Product
+func (Product) TableName() string {
+	return "products"
 }
 
 // Validate checks if the product data is valid
@@ -69,21 +74,31 @@ func NewProductNotFoundError(productID int32) ErrorResponse {
 
 // ShoppingCart represents a shopping cart
 type ShoppingCart struct {
-	ShoppingCartID int                `json:"shopping_cart_id" db:"shopping_cart_id"`
-	CustomerID     int                `json:"customer_id" db:"customer_id"`
-	Status         string             `json:"status" db:"status"`
-	Items          []ShoppingCartItem `json:"items,omitempty" db:"-"`
-	CreatedAt      time.Time          `json:"created_at,omitempty" db:"created_at"`
-	UpdatedAt      time.Time          `json:"updated_at,omitempty" db:"updated_at"`
+	ShoppingCartID int                `json:"shopping_cart_id" gorm:"column:shopping_cart_id;primaryKey;autoIncrement"`
+	CustomerID     int                `json:"customer_id" gorm:"column:customer_id;not null"`
+	Status         string             `json:"status" gorm:"column:status;type:enum('active','abandoned');default:'active'"`
+	Items          []ShoppingCartItem `json:"items,omitempty" gorm:"foreignKey:ShoppingCartID;references:ShoppingCartID"`
+	CreatedAt      time.Time          `json:"created_at,omitempty" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt      time.Time          `json:"updated_at,omitempty" gorm:"column:updated_at;autoUpdateTime"`
+}
+
+// TableName specifies the table name for ShoppingCart
+func (ShoppingCart) TableName() string {
+	return "shopping_carts"
 }
 
 // ShoppingCartItem represents an item in a shopping cart
 type ShoppingCartItem struct {
-	CartItemID     int       `json:"cart_item_id" db:"cart_item_id"`
-	ShoppingCartID int       `json:"shopping_cart_id" db:"shopping_cart_id"`
-	ProductID      int       `json:"product_id" db:"product_id"`
-	Quantity       int       `json:"quantity" db:"quantity"`
-	AddedAt        time.Time `json:"added_at,omitempty" db:"added_at"`
+	CartItemID     int       `json:"cart_item_id" gorm:"column:cart_item_id;primaryKey;autoIncrement"`
+	ShoppingCartID int       `json:"shopping_cart_id" gorm:"column:shopping_cart_id;not null;index:idx_cart"`
+	ProductID      int       `json:"product_id" gorm:"column:product_id;not null"`
+	Quantity       int       `json:"quantity" gorm:"column:quantity;not null;default:1;check:quantity > 0"`
+	AddedAt        time.Time `json:"added_at,omitempty" gorm:"column:added_at;autoCreateTime"`
+}
+
+// TableName specifies the table name for ShoppingCartItem
+func (ShoppingCartItem) TableName() string {
+	return "shopping_cart_items"
 }
 
 // === ORDER MODELS ===

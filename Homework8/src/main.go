@@ -4,22 +4,31 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"gorm.io/gorm"
 )
 
 // Global stores
 var productStore = NewProductStore()
 var orderStore = NewOrderStore()
+var db *gorm.DB // Global database connection
 
 func main() {
 	// Initialize database if DB_HOST is configured
 	if dbHost := os.Getenv("DB_HOST"); dbHost != "" {
 		log.Println("Database configuration detected, initializing...")
-		db, err := InitDatabase()
+		var err error
+		db, err = InitDatabase()
 		if err != nil {
 			log.Printf("⚠️  Warning: Database initialization failed: %v", err)
 			log.Printf("⚠️  Continuing with in-memory storage only")
+			db = nil
 		} else {
-			defer db.Close()
+			// Get underlying sql.DB for cleanup
+			sqlDB, _ := db.DB()
+			if sqlDB != nil {
+				defer sqlDB.Close()
+			}
 			log.Println("✅ Database initialized successfully")
 		}
 	} else {
@@ -48,9 +57,10 @@ func main() {
 	// Initialize API handlers
 	orderAPI := NewOrderAPI(publisher)
 	productAPI := NewProductAPI()
+	cartAPI := NewShoppingCartAPI(db)
 
 	// Setup router with API handlers
-	router := SetupRouter(orderAPI, productAPI)
+	router := SetupRouter(orderAPI, productAPI, cartAPI)
 
 	// Start server on port 8080
 	fmt.Println("🚀 Starting order processing service on port 8080...")
