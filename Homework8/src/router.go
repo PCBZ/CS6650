@@ -5,7 +5,7 @@ import (
 )
 
 // SetupRouter configures and returns the main Gin router
-func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI *ShoppingCartAPI) *gin.Engine {
+func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI CartAPI) *gin.Engine {
 	// Set gin mode
 	gin.SetMode(gin.ReleaseMode)
 
@@ -26,7 +26,7 @@ func SetupRouter(orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI *ShoppingCa
 }
 
 // setupV1Routes configures all v1 API routes
-func setupV1Routes(router *gin.Engine, orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI *ShoppingCartAPI) {
+func setupV1Routes(router *gin.Engine, orderAPI *OrderAPI, productAPI *ProductAPI, cartAPI CartAPI) {
 	v1 := router.Group("/v1")
 	{
 		// Products domain routes
@@ -62,7 +62,7 @@ func setupOrdersRoutes(rg *gin.RouterGroup, orderAPI *OrderAPI) {
 }
 
 // setupShoppingCartsRoutes configures shopping cart-related routes
-func setupShoppingCartsRoutes(rg *gin.RouterGroup, cartAPI *ShoppingCartAPI) {
+func setupShoppingCartsRoutes(rg *gin.RouterGroup, cartAPI CartAPI) {
 	carts := rg.Group("/shopping-carts")
 	{
 		// Create new shopping cart

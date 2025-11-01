@@ -1,18 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-// InitDatabase initializes GORM database connection and creates tables if needed
-func InitDatabase() (*gorm.DB, error) {
+// InitRDSDatabase initializes GORM database connection and creates tables if needed
+func InitRDSDatabase() (*gorm.DB, error) {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")
@@ -84,26 +87,23 @@ func InitDatabase() (*gorm.DB, error) {
 func initSchema(db *gorm.DB) error {
 	log.Println("Initializing database schema...")
 
-	// Check if tables exist
-	var tableCount int64
-	db.Raw(`
-		SELECT COUNT(*) 
-		FROM information_schema.tables 
-		WHERE table_schema = DATABASE() 
-		AND table_name IN ('products', 'shopping_carts', 'shopping_cart_items')
-	`).Scan(&tableCount)
+	migrator := db.Migrator()
+	models := []interface{}{&Product{}, &ShoppingCart{}, &ShoppingCartItem{}}
 
-	if tableCount == 3 {
-		log.Println("✓ Database schema already exists")
+	allTablesExist := true
+	for _, model := range models {
+		if !migrator.HasTable(model) {
+			allTablesExist = false
+			log.Printf("Table for %T does not exist", model)
+			break
+		}
+	}
+
+	if allTablesExist {
 		return nil
 	}
 
-	log.Println("Creating database schema using GORM AutoMigrate...")
-
-	// Auto-migrate tables (this will create tables if they don't exist)
-	// Note: GORM doesn't support ENUM types directly, so we'll create tables first
-	// then let GORM manage them
-	if err := db.AutoMigrate(&Product{}, &ShoppingCart{}, &ShoppingCartItem{}); err != nil {
+	if err := db.AutoMigrate(models...); err != nil {
 		return fmt.Errorf("failed to auto-migrate: %w", err)
 	}
 
@@ -112,65 +112,15 @@ func initSchema(db *gorm.DB) error {
 		db.Exec("ALTER TABLE shopping_cart_items ADD CONSTRAINT unique_cart_product UNIQUE (shopping_cart_id, product_id)")
 	}
 
-	// Insert sample products using GORM
-	sampleProducts := []Product{
-		{
-			SKU:          "LAPTOP-001",
-			Manufacturer: "TechCorp",
-			CategoryID:   1,
-			Weight:       2500,
-			SomeOtherID:  101,
-			Category:     "Electronics",
-			Description:  "High-performance laptop with 16GB RAM and 512GB SSD",
-			Brand:        "TechCorp Pro",
-		},
-		{
-			SKU:          "MOUSE-002",
-			Manufacturer: "PeripheralsCo",
-			CategoryID:   2,
-			Weight:       150,
-			SomeOtherID:  102,
-			Category:     "Accessories",
-			Description:  "Wireless ergonomic mouse with precision tracking",
-			Brand:        "PeripheralsCo Comfort",
-		},
-		{
-			SKU:          "KEYBOARD-003",
-			Manufacturer: "PeripheralsCo",
-			CategoryID:   2,
-			Weight:       800,
-			SomeOtherID:  103,
-			Category:     "Accessories",
-			Description:  "Mechanical keyboard with RGB lighting",
-			Brand:        "PeripheralsCo Gaming",
-		},
-		{
-			SKU:          "MONITOR-004",
-			Manufacturer: "DisplayTech",
-			CategoryID:   3,
-			Weight:       5000,
-			SomeOtherID:  104,
-			Category:     "Displays",
-			Description:  "27-inch 4K UHD monitor with HDR support",
-			Brand:        "DisplayTech Ultra",
-		},
-		{
-			SKU:          "HEADSET-005",
-			Manufacturer: "AudioMax",
-			CategoryID:   4,
-			Weight:       300,
-			SomeOtherID:  105,
-			Category:     "Audio",
-			Description:  "Noise-cancelling wireless headset with microphone",
-			Brand:        "AudioMax Pro",
-		},
-	}
-
-	for _, product := range sampleProducts {
-		// Use FirstOrCreate to avoid duplicates
-		db.Where(Product{SKU: product.SKU}).FirstOrCreate(&product)
-	}
-
 	log.Println("✓ Database schema created successfully")
 	return nil
+}
+
+func initDynamoDB() (dynamodbClient *dynamodb.Client, err error) {
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("unable to load AWS SDK config: %v", err)
+	}
+	dynamoClient := dynamodb.NewFromConfig(cfg)
+	return dynamoClient, nil
 }

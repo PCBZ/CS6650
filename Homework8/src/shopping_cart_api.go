@@ -49,13 +49,6 @@ type AddItemResponse struct {
 // CreateShoppingCart creates a new shopping cart for a customer
 // POST /shopping-carts
 func (api *ShoppingCartAPI) CreateShoppingCart(c *gin.Context) {
-	if api.db == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error": "Database not available",
-		})
-		return
-	}
-
 	var req CreateCartRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -92,13 +85,6 @@ func (api *ShoppingCartAPI) CreateShoppingCart(c *gin.Context) {
 // GetShoppingCart retrieves a shopping cart with all items
 // GET /shopping-carts/:id
 func (api *ShoppingCartAPI) GetShoppingCart(c *gin.Context) {
-	if api.db == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error": "Database not available",
-		})
-		return
-	}
-
 	cartIDStr := c.Param("id")
 	cartID, err := strconv.Atoi(cartIDStr)
 	if err != nil {
@@ -133,13 +119,6 @@ func (api *ShoppingCartAPI) GetShoppingCart(c *gin.Context) {
 // AddItemToCart adds or updates an item in the shopping cart
 // POST /shopping-carts/:id/items
 func (api *ShoppingCartAPI) AddItemToCart(c *gin.Context) {
-	if api.db == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error": "Database not available",
-		})
-		return
-	}
-
 	cartIDStr := c.Param("id")
 	cartID, err := strconv.Atoi(cartIDStr)
 	if err != nil {

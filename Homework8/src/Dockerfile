@@ -28,6 +28,9 @@ WORKDIR /root/
 # Copy the binary from the builder stage
 COPY --from=builder /app/main .
 
+# Set database type environment variable (default: mysql)
+ENV DB_TYPE=dynamodb
+
 # Expose port 8080
 EXPOSE 8080
 
