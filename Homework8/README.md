@@ -137,6 +137,17 @@ Database(MySql) response time data:
 
 It shows 2 implementations are similar. In-memory response time is a little better than database(MySql)
 
+## DynamoDB
+### Design
+- **Partition Key** use `cart_id` as a UUID: a type of random generated ID being appropriate for even distribution.
+- **2 tables** use `cart` and `cart-item` associated with `cart_id` to get relationship.
+| Feature | MySQL | DynamoDB |
+|---------|-------|----------|
+| **Relationship** | Foreign key, JOIN | Partition key |
+| **Scalability** | Vertical/complex horizontal | Horizontal, easy |
+| **Consistency** | Strong, ACID | Eventual (strong opt-in) |
+| **Schema** | Fixed, migrations needed | Flexible, schema-less |
+| **Constraints** | Enforced by DB | Managed by application |
 
 
 
