@@ -139,15 +139,91 @@ It shows 2 implementations are similar. In-memory response time is a little bett
 
 ## DynamoDB
 ### Design
-- **Partition Key** use `cart_id` as a UUID: a type of random generated ID being appropriate for even distribution.
+```terraform
+
+resource "aws_dynamodb_table" "shopping_carts" {
+  name         = "shopping_carts"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "cart_id"
+  attribute {
+    name = "cart_id"
+    type = "N"
+  }
+  attribute {
+    name = "customer_id"
+    type = "N"
+  }
+  global_secondary_index {
+    name            = "customer_id-index"
+    hash_key        = "customer_id"
+    projection_type = "ALL"
+  }
+}
+
+resource "aws_dynamodb_table" "shopping_cart_items" {
+  name         = "shopping_cart_items"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "cart_id"
+  range_key    = "item_id"
+  attribute {
+    name = "cart_id"
+    type = "N"
+  }
+  attribute {
+    name = "item_id"
+    type = "S"
+  }
+}
+```
 - **2 tables** use `cart` and `cart-item` associated with `cart_id` to get relationship.
-| Feature | MySQL | DynamoDB |
-|---------|-------|----------|
-| **Relationship** | Foreign key, JOIN | Partition key |
-| **Scalability** | Vertical/complex horizontal | Horizontal, easy |
-| **Consistency** | Strong, ACID | Eventual (strong opt-in) |
-| **Schema** | Fixed, migrations needed | Flexible, schema-less |
-| **Constraints** | Enforced by DB | Managed by application |
+- **Partition Key** use `cart_id` as a random ID being appropriate for even distribution.
+- **Secondary Index** use `customer_id` for `cart` table to allow querying by customer id.
+- **Sort Key** use `item_id` for `cart-item` table to allow multiple items in a cart.
 
+### API Implementation
+#### Create Shopping Cart
+```go
+cartID := generateSnowflakeID()
+cart := map[string]types.AttributeValue{
+	"cart_id":     &types.AttributeValueMemberN{Value: strconv.FormatInt(cartID, 10)},
+	"customer_id": &types.AttributeValueMemberN{Value: strconv.Itoa(req.CustomerID)},
+	"status":      &types.AttributeValueMemberS{Value: "active"},
+	"created_at":  &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},
+}
 
+_, err := api.dynamoClient.PutItem(context.Background(), &dynamodb.PutItemInput{
+	TableName: aws.String("shopping_carts"),
+	Item:      cart,
+})
+```
+#### Get Shopping Cart
+```go
+// Get cart
+	result, err := api.dynamoClient.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String("shopping_carts"),
+		Key: map[string]types.AttributeValue{
+			"cart_id": &types.AttributeValueMemberN{Value: cartID},
+		},
+	})
+
+	if err != nil {
+		log.Printf("Failed to get shopping cart: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve cart"})
+		return
+	}
+
+	if result.Item == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+		return
+	}
+
+	// Get cart items using Query
+	itemsResult, err := api.dynamoClient.Query(context.Background(), &dynamodb.QueryInput{
+		TableName:              aws.String("shopping_cart_items"),
+		KeyConditionExpression: aws.String("cart_id = :cid"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":cid": &types.AttributeValueMemberN{Value: cartID},
+		},
+	})
+```
 
