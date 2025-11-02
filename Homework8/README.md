@@ -227,3 +227,21 @@ _, err := api.dynamoClient.PutItem(context.Background(), &dynamodb.PutItemInput{
 	})
 ```
 
+### Eventual Consistency Testing
+I ran the consistency test for 100 iterations. Each iteration contains 3 tests, checking read-after-write consistency for different scenarios.
+The final results are as follows:
+```bash
+════════════════════════════════════════════════════════════
+📊 FINAL CONSISTENCY REPORT (100 iterations)
+════════════════════════════════════════════════════════════
+Target: http://order-processing-service-alb-907785166.us-west-2.elb.amazonaws.com
+------------------------------------------------------------
+Total Checks: 2200
+Inconsistencies: 10
+Consistency Rate: 99.55%
+
+⚠️  Observed 10 inconsistencies
+   This is expected behavior for eventually consistent reads.
+   DynamoDB typically achieves consistency within milliseconds.
+════════════════════════════════════════════════════════════
+```
