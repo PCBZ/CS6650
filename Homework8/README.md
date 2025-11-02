@@ -245,3 +245,20 @@ Consistency Rate: 99.55%
    DynamoDB typically achieves consistency within milliseconds.
 ════════════════════════════════════════════════════════════
 ```
+
+### Testing
+<img width="1200" height="600" alt="dynamodb_response_distribution" src="https://github.com/user-attachments/assets/9303391b-a5af-47e6-a466-5e281b4be40a" />
+
+**Comparison**:  
+- **Response Time**: Both MySQL and DynamoDB have similar typical response delay, but DynamoDB has more extremly situation.
+- **get_cart**: MySQL significantly better, tighter distribution
+
+<img width="1214" height="542" alt="image" src="https://github.com/user-attachments/assets/563c4baa-4b8b-465c-932f-f9e77282aaa7" />
+No throttle events
+<img width="1130" height="639" alt="image" src="https://github.com/user-attachments/assets/194df2e1-6915-4717-83df-be199d3af8f7" />
+<img width="1133" height="646" alt="image" src="https://github.com/user-attachments/assets/65e45cf6-1b2e-4d1d-a50e-ffbb4195ae75" />
+No partition key is accessed overload.
+
+## Database Comparison & Analysis
+
+
