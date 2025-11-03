@@ -11,18 +11,46 @@
 ```
 
 ### Schema Design
-- **Tables:** products, shopping_carts, shopping_cart_items
+```mermaid
+erDiagram
+    products ||--o{ shopping_cart_items : "references (logical)"
+    shopping_carts ||--o{ shopping_cart_items : "has many (ORM)"
+    
+    products {
+        int product_id PK "AUTO_INCREMENT"
+        varchar sku UK "UNIQUE, NOT NULL"
+        varchar manufacturer "NOT NULL"
+        int category_id "NOT NULL"
+        int weight "NOT NULL, Weight in grams"
+        int some_other_id "NOT NULL"
+        varchar category
+        text description
+        varchar brand
+    }
+    
+    shopping_carts {
+        int shopping_cart_id PK "AUTO_INCREMENT"
+        int customer_id "NOT NULL"
+        enum status "active, abandoned, DEFAULT active"
+        timestamp created_at "AUTO"
+        timestamp updated_at "AUTO"
+    }
+    
+    shopping_cart_items {
+        int cart_item_id PK "AUTO_INCREMENT"
+        int shopping_cart_id "NOT NULL, INDEX idx_cart"
+        int product_id "NOT NULL, no index"
+        int quantity "NOT NULL, DEFAULT 1, CHECK > 0"
+        timestamp added_at "AUTO"
+    }
+```
 
 **Key Indexes and Why:**
 
 1. **PRIMARY KEY Indexes (Automatic)**
    - Fast lookup by ID for all tables
    
-2. **Foreign Key Indexes (Automatic)**
-   - `shopping_cart_items.shopping_cart_id` - Enables fast JOIN for GET API
-   - `shopping_cart_items.product_id` - Validates product exists
-   
-3. **Explicit Index**
+2. **Explicit Index**
    - `shopping_cart_items.idx_cart` on `shopping_cart_id` - Ensures <50ms cart retrieval with up to 50 items
    - **Critical for performance:** Index seek (~5-20ms) vs full table scan (~100ms+)
 
@@ -167,7 +195,6 @@ resource "aws_dynamodb_table" "shopping_cart_items" {
 ```
 - **2 tables** use `cart` and `cart-item` associated with `cart_id` to get relationship.
 - **Partition Key** use `cart_id` as a random ID being appropriate for even distribution.
-- **Secondary Index** use `customer_id` for `cart` table to allow querying by customer id.
 - **Sort Key** use `item_id` for `cart-item` table to allow multiple items in a cart.
 
 ### API Implementation
@@ -189,32 +216,32 @@ _, err := api.dynamoClient.PutItem(context.Background(), &dynamodb.PutItemInput{
 #### Get Shopping Cart
 ```go
 // Get cart
-	result, err := api.dynamoClient.GetItem(context.Background(), &dynamodb.GetItemInput{
-		TableName: aws.String("shopping_carts"),
-		Key: map[string]types.AttributeValue{
-			"cart_id": &types.AttributeValueMemberN{Value: cartID},
-		},
-	})
+result, err := api.dynamoClient.GetItem(context.Background(), &dynamodb.GetItemInput{
+	TableName: aws.String("shopping_carts"),
+	Key: map[string]types.AttributeValue{
+		"cart_id": &types.AttributeValueMemberN{Value: cartID},
+	},
+})
 
-	if err != nil {
-		log.Printf("Failed to get shopping cart: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve cart"})
-		return
-	}
+if err != nil {
+	log.Printf("Failed to get shopping cart: %v", err)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve cart"})
+	return
+}
 
-	if result.Item == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
-		return
-	}
+if result.Item == nil {
+	c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+	return
+}
 
-	// Get cart items using Query
-	itemsResult, err := api.dynamoClient.Query(context.Background(), &dynamodb.QueryInput{
-		TableName:              aws.String("shopping_cart_items"),
-		KeyConditionExpression: aws.String("cart_id = :cid"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":cid": &types.AttributeValueMemberN{Value: cartID},
-		},
-	})
+// Get cart items using Query
+itemsResult, err := api.dynamoClient.Query(context.Background(), &dynamodb.QueryInput{
+	TableName:              aws.String("shopping_cart_items"),
+	KeyConditionExpression: aws.String("cart_id = :cid"),
+	ExpressionAttributeValues: map[string]types.AttributeValue{
+		":cid": &types.AttributeValueMemberN{Value: cartID},
+	},
+})
 ```
 
 ### Eventual Consistency Testing
@@ -302,4 +329,5 @@ DynamoDB's query is much more different from conventional SQL.
 
 ### Key Insights Gained
 Based on learning journey, I suggest using MySQL to handle complex query, and using DynamoDB to fast deployment. Because it is difficult to finish the logic with DynamoDB when a complex query is needed. It takes quite a long time to initialize MySQL.
+
 
