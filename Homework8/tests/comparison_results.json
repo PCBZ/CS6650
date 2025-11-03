@@ -1,0 +1,48 @@
+{
+  "mysql": {
+    "avg_response_time": 45.06786666666667,
+    "p50_response_time": 41.25,
+    "p95_response_time": 72.946,
+    "p99_response_time": 105.03119999999981,
+    "success_rate": 100.0
+  },
+  "dynamodb": {
+    "avg_response_time": 45.232,
+    "p50_response_time": 40.3,
+    "p95_response_time": 71.03749999999992,
+    "p99_response_time": 122.88629999999944,
+    "success_rate": 100.0
+  },
+  "comparison": {
+    "avg_response_time": {
+      "mysql": 45.06786666666667,
+      "dynamodb": 45.232,
+      "winner": "MySQL",
+      "margin_percent": 0.36286994458200417
+    },
+    "p50_response_time": {
+      "mysql": 41.25,
+      "dynamodb": 40.3,
+      "winner": "DynamoDB",
+      "margin_percent": 2.30303030303031
+    },
+    "p95_response_time": {
+      "mysql": 72.946,
+      "dynamodb": 71.03749999999992,
+      "winner": "DynamoDB",
+      "margin_percent": 2.6163189208456594
+    },
+    "p99_response_time": {
+      "mysql": 105.03119999999981,
+      "dynamodb": 122.88629999999944,
+      "winner": "MySQL",
+      "margin_percent": 14.529772643492159
+    },
+    "success_rate": {
+      "mysql": 100.0,
+      "dynamodb": 100.0,
+      "winner": "DynamoDB",
+      "margin_percent": 0.0
+    }
+  }
+}

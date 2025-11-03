@@ -102,6 +102,7 @@ func (api *ShoppingCartAPIDynamo) GetShoppingCart(c *gin.Context) {
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":cid": &types.AttributeValueMemberN{Value: cartID},
 		},
+		ConsistentRead: aws.Bool(false),
 	})
 
 	if err != nil {
@@ -152,6 +153,7 @@ func (api *ShoppingCartAPIDynamo) AddItemToCart(c *gin.Context) {
 		Key: map[string]types.AttributeValue{
 			"cart_id": &types.AttributeValueMemberN{Value: cartID},
 		},
+		ConsistentRead: aws.Bool(false),
 	})
 
 	if err != nil {
@@ -165,11 +167,9 @@ func (api *ShoppingCartAPIDynamo) AddItemToCart(c *gin.Context) {
 		return
 	}
 
-	// Create or update item
-	itemID := cartID + "-" + strconv.Itoa(req.ProductID)
+	// Create or update item (using product_id as sort key)
 	item := map[string]types.AttributeValue{
 		"cart_id":    &types.AttributeValueMemberN{Value: cartID},
-		"item_id":    &types.AttributeValueMemberS{Value: itemID},
 		"product_id": &types.AttributeValueMemberN{Value: strconv.Itoa(req.ProductID)},
 		"quantity":   &types.AttributeValueMemberN{Value: strconv.Itoa(req.Quantity)},
 		"added_at":   &types.AttributeValueMemberN{Value: strconv.FormatInt(time.Now().Unix(), 10)},

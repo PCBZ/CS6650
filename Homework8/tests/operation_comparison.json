@@ -1,0 +1,30 @@
+{
+  "mysql": {
+    "create_cart": {
+      "avg": 44.02439999999999,
+      "count": 50
+    },
+    "add_items": {
+      "avg": 49.834799999999994,
+      "count": 50
+    },
+    "get_cart": {
+      "avg": 41.34440000000001,
+      "count": 50
+    }
+  },
+  "dynamodb": {
+    "create_cart": {
+      "avg": 47.0368,
+      "count": 50
+    },
+    "get_cart": {
+      "avg": 44.5858,
+      "count": 50
+    },
+    "add_items": {
+      "avg": 44.0734,
+      "count": 50
+    }
+  }
+}
