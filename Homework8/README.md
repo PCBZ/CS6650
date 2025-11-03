@@ -296,13 +296,16 @@ No partition key is accessed overload.
 ### Real-World Scenario Recommendations
 **Scenario A: Startup MVP**: DynamoDB  
 - 1 developer can launch DynamoDB fast but not for MySQL.
-- No need to operate overhead. 
+- No need to operate overhead.
+
 **Scenario B: Growing Business**: MySQL
 - 5 developers can handle operational complexity.
 - Predictable scaling allows better budget forecasting for steady growth.
+
 **Scenario C: High-Traffic Events**: MySQL  
 - Predictable infrastructure controls revenue even in a spike traffic.
 - Can invest in infrastructure means it offers budget and technical resources to properly architect MySQL for high-scale scenarios.
+
 **Scenario D: Global Platform**: DynamoDB + MySQL
 - DynamoDB provides multi-regional features for different location's users.
 - Enterprise services like business analytic require complex query, which is suitable for MySQL.
@@ -329,5 +332,6 @@ DynamoDB's query is much more different from conventional SQL.
 
 ### Key Insights Gained
 Based on learning journey, I suggest using MySQL to handle complex query, and using DynamoDB to fast deployment. Because it is difficult to finish the logic with DynamoDB when a complex query is needed. It takes quite a long time to initialize MySQL.
+
 
 
