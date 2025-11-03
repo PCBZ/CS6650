@@ -260,5 +260,28 @@ No throttle events
 No partition key is accessed overload.
 
 ## Database Comparison & Analysis
+### Data Comparison
+| Metric | MySQL | DynamoDB | Winner | Margin |
+|:-------|------:|--------:|:-------|-------:|
+| **Avg Response Time (ms)** | 45.07 | 45.80 | MySQL | 1.60% |
+| **P50 Response Time (ms)** | 41.25 | 40.84 | DynamoDB | 0.99% |
+| **P95 Response Time (ms)** | 72.95 | 72.49 | DynamoDB | 0.62% |
+| **P99 Response Time (ms)** | 105.03 | 122.07 | MySQL | 13.96% |
+| **Success Rate (%)** | 100.00% | 100.00% | Tie | 0.00% |
+
+| Operation | MySQL Avg (ms) | DynamoDB Avg (ms) | Faster By |
+|-----------|----------------|-------------------|-----------|
+| ADD_ITEMS | 49.83 | 47.04 | DynamoDB (5.61%) |
+| CREATE_CART | 44.02 | 45.66 | MySQL (3.58%) |
+| GET_CART | 41.34 | 44.70 | MySQL (7.51%) |
+
+### Consistency Model Impact Assessment
+- Consistency: MySQL 100%, Dynamo DB 99.55%
+- When a customer purchases an item, inventory decrements might not immediately propagate across all DynamoDB replicas. This creates the classic overselling problem: multiple customers could simultaneously see the same "last item" as available
+- MySQL guarantees strong consistency, customers always get the correct information of the system, while losing performance; DynamoDB returns the value that may be outdated, but it ensures the availability and partition tolerance.
+- Under heavy-load system, customers may keep receiving the error code or timeout, seeing endless loading of the webUI, if the system uses MySQL; while customers may get the outdated data of products on the web, if the sytem uses DynamoDB.
+
+### Resource Efficiency Analysis
+
 
 
