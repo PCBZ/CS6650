@@ -11,18 +11,46 @@
 ```
 
 ### Schema Design
-- **Tables:** products, shopping_carts, shopping_cart_items
+```mermaid
+erDiagram
+    products ||--o{ shopping_cart_items : "references (logical)"
+    shopping_carts ||--o{ shopping_cart_items : "has many (ORM)"
+    
+    products {
+        int product_id PK "AUTO_INCREMENT"
+        varchar sku UK "UNIQUE, NOT NULL"
+        varchar manufacturer "NOT NULL"
+        int category_id "NOT NULL"
+        int weight "NOT NULL, Weight in grams"
+        int some_other_id "NOT NULL"
+        varchar category
+        text description
+        varchar brand
+    }
+    
+    shopping_carts {
+        int shopping_cart_id PK "AUTO_INCREMENT"
+        int customer_id "NOT NULL"
+        enum status "active, abandoned, DEFAULT active"
+        timestamp created_at "AUTO"
+        timestamp updated_at "AUTO"
+    }
+    
+    shopping_cart_items {
+        int cart_item_id PK "AUTO_INCREMENT"
+        int shopping_cart_id "NOT NULL, INDEX idx_cart"
+        int product_id "NOT NULL, no index"
+        int quantity "NOT NULL, DEFAULT 1, CHECK > 0"
+        timestamp added_at "AUTO"
+    }
+```
 
 **Key Indexes and Why:**
 
 1. **PRIMARY KEY Indexes (Automatic)**
    - Fast lookup by ID for all tables
    
-2. **Foreign Key Indexes (Automatic)**
-   - `shopping_cart_items.shopping_cart_id` - Enables fast JOIN for GET API
-   - `shopping_cart_items.product_id` - Validates product exists
-   
-3. **Explicit Index**
+2. **Explicit Index**
    - `shopping_cart_items.idx_cart` on `shopping_cart_id` - Ensures <50ms cart retrieval with up to 50 items
    - **Critical for performance:** Index seek (~5-20ms) vs full table scan (~100ms+)
 
@@ -140,7 +168,6 @@ It shows 2 implementations are similar. In-memory response time is a little bett
 ## DynamoDB
 ### Design
 ```terraform
-
 resource "aws_dynamodb_table" "shopping_carts" {
   name         = "shopping_carts"
   billing_mode = "PAY_PER_REQUEST"
@@ -149,35 +176,25 @@ resource "aws_dynamodb_table" "shopping_carts" {
     name = "cart_id"
     type = "N"
   }
-  attribute {
-    name = "customer_id"
-    type = "N"
-  }
-  global_secondary_index {
-    name            = "customer_id-index"
-    hash_key        = "customer_id"
-    projection_type = "ALL"
-  }
 }
 
 resource "aws_dynamodb_table" "shopping_cart_items" {
   name         = "shopping_cart_items"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "cart_id"
-  range_key    = "item_id"
+  range_key    = "product_id"
   attribute {
     name = "cart_id"
     type = "N"
   }
   attribute {
-    name = "item_id"
-    type = "S"
+    name = "product_id"
+    type = "N"
   }
 }
 ```
 - **2 tables** use `cart` and `cart-item` associated with `cart_id` to get relationship.
 - **Partition Key** use `cart_id` as a random ID being appropriate for even distribution.
-- **Secondary Index** use `customer_id` for `cart` table to allow querying by customer id.
 - **Sort Key** use `item_id` for `cart-item` table to allow multiple items in a cart.
 
 ### API Implementation
@@ -199,55 +216,45 @@ _, err := api.dynamoClient.PutItem(context.Background(), &dynamodb.PutItemInput{
 #### Get Shopping Cart
 ```go
 // Get cart
-	result, err := api.dynamoClient.GetItem(context.Background(), &dynamodb.GetItemInput{
-		TableName: aws.String("shopping_carts"),
-		Key: map[string]types.AttributeValue{
-			"cart_id": &types.AttributeValueMemberN{Value: cartID},
-		},
-	})
+result, err := api.dynamoClient.GetItem(context.Background(), &dynamodb.GetItemInput{
+	TableName: aws.String("shopping_carts"),
+	Key: map[string]types.AttributeValue{
+		"cart_id": &types.AttributeValueMemberN{Value: cartID},
+	},
+})
 
-	if err != nil {
-		log.Printf("Failed to get shopping cart: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve cart"})
-		return
-	}
+if err != nil {
+	log.Printf("Failed to get shopping cart: %v", err)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve cart"})
+	return
+}
 
-	if result.Item == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
-		return
-	}
+if result.Item == nil {
+	c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+	return
+}
 
-	// Get cart items using Query
-	itemsResult, err := api.dynamoClient.Query(context.Background(), &dynamodb.QueryInput{
-		TableName:              aws.String("shopping_cart_items"),
-		KeyConditionExpression: aws.String("cart_id = :cid"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":cid": &types.AttributeValueMemberN{Value: cartID},
-		},
-	})
+// Get cart items using Query
+itemsResult, err := api.dynamoClient.Query(context.Background(), &dynamodb.QueryInput{
+	TableName:              aws.String("shopping_cart_items"),
+	KeyConditionExpression: aws.String("cart_id = :cid"),
+	ExpressionAttributeValues: map[string]types.AttributeValue{
+		":cid": &types.AttributeValueMemberN{Value: cartID},
+	},
+})
 ```
 
 ### Eventual Consistency Testing
 I ran the consistency test for 100 iterations. Each iteration contains 3 tests, checking read-after-write consistency for different scenarios.
 The final results are as follows:
 ```bash
-════════════════════════════════════════════════════════════
-📊 FINAL CONSISTENCY REPORT (100 iterations)
-════════════════════════════════════════════════════════════
-Target: http://order-processing-service-alb-907785166.us-west-2.elb.amazonaws.com
-------------------------------------------------------------
 Total Checks: 2200
-Inconsistencies: 10
-Consistency Rate: 99.55%
-
-⚠️  Observed 10 inconsistencies
-   This is expected behavior for eventually consistent reads.
-   DynamoDB typically achieves consistency within milliseconds.
-════════════════════════════════════════════════════════════
+Inconsistencies: 15
+Consistency Rate: 99.32%
 ```
 
 ### Testing
-<img width="1200" height="600" alt="dynamodb_response_distribution" src="https://github.com/user-attachments/assets/9303391b-a5af-47e6-a466-5e281b4be40a" />
+<img width="1200" height="600" alt="dynamodb_response_distribution" src="https://github.com/user-attachments/assets/b2ea8a40-2c53-497b-8be7-be195ca220d0" />
 
 **Comparison**:  
 - **Response Time**: Both MySQL and DynamoDB have similar typical response delay, but DynamoDB has more extremly situation.
@@ -263,25 +270,68 @@ No partition key is accessed overload.
 ### Data Comparison
 | Metric | MySQL | DynamoDB | Winner | Margin |
 |:-------|------:|--------:|:-------|-------:|
-| **Avg Response Time (ms)** | 45.07 | 45.80 | MySQL | 1.60% |
-| **P50 Response Time (ms)** | 41.25 | 40.84 | DynamoDB | 0.99% |
-| **P95 Response Time (ms)** | 72.95 | 72.49 | DynamoDB | 0.62% |
-| **P99 Response Time (ms)** | 105.03 | 122.07 | MySQL | 13.96% |
+| **Avg Response Time (ms)** | 45.07 | 45.23 | MySQL | 0.36% |
+| **P50 Response Time (ms)** | 41.25 | 40.34 | DynamoDB | 2.30% |
+| **P95 Response Time (ms)** | 72.95 | 71.04 | DynamoDB | 2.62% |
+| **P99 Response Time (ms)** | 105.03 | 122.89 | MySQL | 14.53% |
 | **Success Rate (%)** | 100.00% | 100.00% | Tie | 0.00% |
 
 | Operation | MySQL Avg (ms) | DynamoDB Avg (ms) | Faster By |
 |-----------|----------------|-------------------|-----------|
-| ADD_ITEMS | 49.83 | 47.04 | DynamoDB (5.61%) |
-| CREATE_CART | 44.02 | 45.66 | MySQL (3.58%) |
-| GET_CART | 41.34 | 44.70 | MySQL (7.51%) |
+| ADD_ITEMS | 49.83 | 44.07 | DynamoDB (11.56%) |
+| CREATE_CART | 44.02 | 47.04 | MySQL (6.40%) |
+| GET_CART | 41.34 | 44.59 | MySQL (7.27%) |
 
 ### Consistency Model Impact Assessment
-- Consistency: MySQL 100%, Dynamo DB 99.55%
+#### Investigation Requirements
+- Consistency: MySQL 100%, Dynamo DB 99.32%
 - When a customer purchases an item, inventory decrements might not immediately propagate across all DynamoDB replicas. This creates the classic overselling problem: multiple customers could simultaneously see the same "last item" as available
 - MySQL guarantees strong consistency, customers always get the correct information of the system, while losing performance; DynamoDB returns the value that may be outdated, but it ensures the availability and partition tolerance.
 - Under heavy-load system, customers may keep receiving the error code or timeout, seeing endless loading of the webUI, if the system uses MySQL; while customers may get the outdated data of products on the web, if the sytem uses DynamoDB.
-
 ### Resource Efficiency Analysis
+- MySQL requires setting max connections, pool size, and timeout. Scaling requires manual intervention; DynamoDB is managed by AWS, scaling automatically to handle any traffic spike.
+- MySQL provides high predictability as it has fixed resource model. And capacity planning is complex, because it requires to foresee the traffic and match the settings. DynamoDB varies with usage pattern. However, AWS helps you scaling it automatically.
+- MySQL requires significant operational overhead including daily monitoring of server resources, connection pool tuning, query optimization, backup management, and handling replication/failover scenarios, demanding either dedicated DBA expertise or substantial developer time on infrastructure concerns. DynamoDB eliminates virtually all operational complexity by providing a fully managed service where AWS handles scaling, maintenance, and infrastructure, allowing developers to focus purely on application logic and occasional cost monitoring, though this convenience comes with less predictable costs and reduced fine-grained control over performance tuning.
+
+### Real-World Scenario Recommendations
+**Scenario A: Startup MVP**: DynamoDB  
+- 1 developer can launch DynamoDB fast but not for MySQL.
+- No need to operate overhead.
+
+**Scenario B: Growing Business**: MySQL
+- 5 developers can handle operational complexity.
+- Predictable scaling allows better budget forecasting for steady growth.
+
+**Scenario C: High-Traffic Events**: MySQL  
+- Predictable infrastructure controls revenue even in a spike traffic.
+- Can invest in infrastructure means it offers budget and technical resources to properly architect MySQL for high-scale scenarios.
+
+**Scenario D: Global Platform**: DynamoDB + MySQL
+- DynamoDB provides multi-regional features for different location's users.
+- Enterprise services like business analytic require complex query, which is suitable for MySQL.
+- AWS handles DynamoDB 24/7, internal team focuses MySQL expertise on smaller, critical systems.
+
+## Your Evidence-Based Architecture Recommendations
+1. **Shopping Cart Winner**: MySQL
+   Response time is lower. Retrieving cart items need less communication with database.
+2. **When to choose the other**:
+   - Unpredictable traffic patterns, eg. sudden spikes.
+   - More concurrent requests happens: DynamoDB is easy to scale.
+3. **Polyglot Strategy**:
+   - **Shopping carts**: MySQL
+   - **User sessions**: DynamoDB, it is usually simple check and being visited in high frequency.
+   - **Product catalog**: MySQL, supporting complex query; read operations are more than write.
+   - **Order history**: MySQL, supporting complex query.
+
+## Learning Reflection
+### What Surprised You?
+The eventual consistency speed is unexpected. Even it start immediately after it writes successfully.
+### What Failed Initially?
+MySQL schema does not initialize. It is quite complex to write SQL to handle API requests.
+DynamoDB's query is much more different from conventional SQL.
+
+### Key Insights Gained
+Based on learning journey, I suggest using MySQL to handle complex query, and using DynamoDB to fast deployment. Because it is difficult to finish the logic with DynamoDB when a complex query is needed. It takes quite a long time to initialize MySQL.
 
 
 
