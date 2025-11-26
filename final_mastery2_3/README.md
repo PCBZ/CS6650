@@ -1,218 +1,180 @@
-# Homework 6
-## Search API single node performance
-### Baseline 5 users - 2 min
-<img width="2928" height="1800" alt="total_requests_per_second_1761078531 749" src="https://github.com/user-attachments/assets/47c16366-b4f8-4a75-b9a2-31d39be18ba8" />
+## Short Project Report / 简短项目报告
 
-<img width="1079" height="503" alt="image" src="https://github.com/user-attachments/assets/80f9baa4-ac82-4b85-898d-4b112e818ce9" />
+This report summarizes the repository, architecture, deployment choices, and the metrics to monitor in each environment. It's designed to be handed to an interviewer and kept under 5 pages.
 
-### Breaking Point 20 users - 3 min
-<img width="2928" height="1800" alt="total_requests_per_second_1761078072 891" src="https://github.com/user-attachments/assets/7e927857-5d3c-44a3-8af6-2d01fdc284f4" />
-<img width="1225" height="498" alt="image" src="https://github.com/user-attachments/assets/4f71c219-4540-4352-af60-9221d28b7a2c" />
+### Repo information / 仓库信息
 
-With load increasing, both CPU and memory utilization increase.
-| Metric | 5 Users | 20 Users |
-|--------|---------|----------|
-| RPS    |  142    |  500  |
-| **CPU Utilization** | 14% | 44% |
-| **Memory Utilization** | 17% | 10% |
-| 50% response time (ms) | 32 | 35 |
-| 95% response time (ms) | 50 | 80 |
+- Repository path: `final_mastery2_3` (local)
+- Project: Order Processing & Product Search microservice (Go / Gin)
+- Key technologies: Go (Gin), Docker, Terraform, LocalStack (Pro), ECS (Fargate model), ALB, CloudWatch (simulated), Locust for load testing
 
-**Key Observations:**
-- Memory usage remains stable
-- CPU becomes the primary bottleneck
- 
-Increase CPU allocation from 256 → 512 CPU units to handle higher load.
-<img width="2928" height="1800" alt="total_requests_per_second_1761026159 267" src="https://github.com/user-attachments/assets/05305d1f-58e7-444c-a97f-7074ffb187d9" />
+Replace with your public repo URL before sharing: https://github.com/<your-username>/final_mastery2_3
 
-<img width="1263" height="504" alt="image" src="https://github.com/user-attachments/assets/d4d68272-f40e-42f2-aa2b-35c46f6b47c4" />
+---
 
+## Architecture (diagram)
 
-Switching to 512v CPU and 1G memory and keeping test with 20 users:
-| Metric (20 users) | 256v CPU | 512v CPU |
-|--------|---------| -------- |
-| **CPU Utilization** | 44% | 23% |
-| 50% response time (ms) | 35 | 40 |
-| 95% response time (ms) | 80 | 80 |
+Below is an architecture diagram (Mermaid). Use this when presenting the system topology.
 
-## Horizontal Scaling Infrastructure
-### Architecture with ALB
 ```mermaid
-graph TD
-    A[Client] --> B[ALB]
-    B --> C[Target Group]
-    C --> D[ECS Task]
-    C --> E[ECS Task]
-    C --> F[ECS Task]
-    C --> G[ECS Task]
-    
-    H[Auto Scaling]
-    H -.-> D
-    H -.-> E
-    H -.-> F
-    H -.-> G
-    
-    style B fill:#ff9999
-    style C fill:#99ff99
-    style H fill:#99ccff
-```
+architecture-beta
+  group internet(internet)[Internet]
 
-### Core Functions
-#### ALB
-```tf
-resource "aws_lb" "this" {
-  name               = "${var.service_name}-alb"
-  internal           = false
-  load_balancer_type = "application"
+  group alb(logos:aws-elb)[ALB] in internet
+  service alb_instance(logos:aws-elb)[ALB / Listener] in alb
 
-resource "aws_lb_target_group" "this" {
-  ***
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    interval            = 30
-    matcher             = "200"
-    path                = var.health_check_path
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 2
-  }
-```
+  group vpc(cloud)[VPC]
+  group public_subnets(cloud)[Public Subnets] in vpc
+  group private_subnets(cloud)[Private Subnets] in vpc
 
-### Auto Scaling
-```tf
-variable "min_capacity" {
-  type        = number
-  default     = 2
-  description = "Minimum number of ECS tasks"
-}
+  service nat(gateway)[NAT Gateway] in public_subnets
+  service ecs_cluster(server)[ECS Cluster] in private_subnets
+  service ecs_service(server)[ECS Service (Fargate)] in ecs_cluster
+  service tasks(server)[Task (container)] in ecs_service
+  service ecr(database)[ECR Repo] in vpc
+  service logs(database)[CloudWatch Logs] in vpc
 
-variable "max_capacity" {
-  type        = number
-  default     = 4
-  description = "Maximum number of ECS tasks"
-}
+  alb_instance:R -- L:ecs_service
+  ecs_service:B -- T:tasks
+  tasks:R -- L:logs
+  tasks:L -- R:ecr
+  nat:R -- L:ecs_service
 
-variable "target_cpu_utilization" {
-  type        = number
-  default     = 70
-  description = "Target CPU utilization percentage for auto scaling"
-}
+``` 
 
-variable "health_check_path" {
-  type        = string
-  default     = "/health"
-  description = "Health check path for ALB"
-}
-```
+Notes:
+- ALB terminates HTTP and forwards to container port 8080.
+- ECR stores built Docker images (pushed via Terraform/Docker provider to LocalStack in tests).
+- CloudWatch receives container logs and metrics (simulated in LocalStack testing).
 
+---
 
-### Applying 20 users
-<img width="2928" height="1800" alt="total_requests_per_second_1761116983 614" src="https://github.com/user-attachments/assets/061fe4cb-de63-4ffb-8c94-5b263ffdce68" />
-<img width="1295" height="461" alt="image" src="https://github.com/user-attachments/assets/816df708-25b3-49c1-9625-a402aef7c86d" />
+## Deployment environments and when to use each / 部署环境与适用场景
 
+1) Local (developer machine)
+   - Tools: local Docker, `go run`, unit tests, small integration tests.
+   - When to use: fast iteration; writing features and unit tests; debugging business logic.
+   - Pros: instant feedback, cheap, no infra costs.
+   - Cons: not representative of network, IAM, and distributed load.
 
-### Upgrading to 40 users
-<img width="2928" height="1800" alt="total_requests_per_second_1761117397 901" src="https://github.com/user-attachments/assets/c1f2bcd5-07b6-4023-ae93-70c1f5e489ef" />
-<img width="1339" height="494" alt="image" src="https://github.com/user-attachments/assets/35cc0aaa-8466-4e35-ab38-9966e58fc712" />
+2) LocalStack (full-stack simulation)
+   - Tools: LocalStack (Pro), Terraform configured to point to LocalStack endpoints, Docker images pushed to LocalStack ECR, run ECS tasks simulated by LocalStack.
+   - When to use: validate IaC (Terraform) and higher-level integration (ECR/ECS/ALB) without cloud cost; smoke-test deployments and infra changes.
+   - Pros: near-real AWS API compatibility, good for CI prechecks, fast iteration on infra code.
+   - Cons: slight behavioral differences from real AWS; some services may be simulated or behind feature flags.
 
+3) Staging (real cloud, isolated account)
+   - Tools: real AWS account (or sandbox), CI pipeline deploys to staging, end-to-end load tests.
+   - When to use: final verification before production, non-destructive load tests, security review.
+   - Pros: identical to production environment, enables safe scale testing.
+   - Cons: cost and IAM/cleanup overhead.
 
-### Upgrading to 60 users
-<img width="2928" height="1800" alt="total_requests_per_second_1761157409 329" src="https://github.com/user-attachments/assets/29bca551-a49b-4494-9c18-f0aef3298c48" />
-<img width="1350" height="512" alt="image" src="https://github.com/user-attachments/assets/94c9f823-6ed9-4063-bbd8-4800c749610e" />
+4) Production
+   - Tools: real AWS infrastructure, full monitoring and alerting, autoscaling enabled.
+   - When to use: serving real traffic.
+   - Pros: reliable, scalable.
+   - Cons: requires strict change control and monitoring.
 
+Concrete evidence / examples of use:
+- LocalStack: This project uses LocalStack to simulate ECS and ALB for CI and manual validation. Example command used during development:
 
+  - Start LocalStack with required services (iam, ec2, ecs, ecr, elb, logs, application-autoscaling).
+  - Run `terraform init && terraform apply -auto-approve` pointed at LocalStack endpoint (http://localhost:4566) to create the simulated ECR, ECS cluster, ALB and autoscaling target/policy.
 
+  Observed result in this repo: terraform plan created 35 resources (VPC, subnets, ALB, ECS, auto-scaling target/policy) and after apply the ALB DNS resolved to `order-processing-service-alb.elb.localhost.localstack.cloud` (LocalStack host mapping).
 
-#### Performance Test Results Comparison
-| Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
-|-------|------------|---------------|------------------|-----|------------------------|------------------------|
-| 20    | 2          | 60            | 10               | 120 | 150                    | 300                    |
-| 40    | 3          | 45            | 10               | 130 | 260                    | 470                    
-| 60    | 4          | 98            | 12               | 500 | 80                     | 320                    |
+---
 
-### Key Observations
-**Auto-Scaling is Responsive**  
-- CPU-based scaling (70% threshold) triggers appropriately
-- New instances come online before system failure
-- Load rebalancing happens automatically
-**Performance Improves with Scale**
-- 95th percentile response times improve: 440ms → 430ms → 340ms
-- This demonstrates the power of distributing load across multiple instances
+## Metrics and which are meaningful in each environment / 各环境重要指标
 
-## Resilience Test
-<img width="1178" height="331" alt="image" src="https://github.com/user-attachments/assets/d5c3f817-f1ac-40f7-bd4d-8da1f702341d" />
-<img width="1157" height="252" alt="image" src="https://github.com/user-attachments/assets/fb4e96e8-c113-4155-8781-c0328cb41b69" />
-<img width="1164" height="279" alt="image" src="https://github.com/user-attachments/assets/6ca39f63-46ee-4986-a65b-095172921ed3" />
+Core metrics to collect and why:
 
-### Key Observation
-The system had self-healing mechanism, auto detecting "unhealthy", then created a new task, maintaining healthy status.
+- Latency (p50 / p95 / p99)
+  - Why: Shows user-perceived response time and tail latency.
+  - Where: All environments. In Local use simple latency histograms. In Staging/Prod use real APM or CloudWatch.
 
-## Exploration
-### 90 default CPU utilization
-<img width="1162" height="635" alt="image" src="https://github.com/user-attachments/assets/bb79900d-f58d-4786-8982-03a0110ced00" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760160011 663" src="https://github.com/user-attachments/assets/16605e56-9ed8-4f24-8401-c62f29d407ec" />
+- Request rate (RPS)
+  - Why: Understand throughput and scaling needs.
+  - Where: Staging and Prod (drive with load test in Staging). In LocalStack, use to validate autoscaling triggers.
 
-### 50 default CPU utilization
-<img width="1161" height="655" alt="image" src="https://github.com/user-attachments/assets/764fd7b5-d6d9-43cb-be9a-a36c104c14bc" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760164237 933" src="https://github.com/user-attachments/assets/93a7d698-01a8-4e3e-a9ca-f147bbbab5ac" />
+- Error rate (4xx/5xx)
+  - Why: Detect regressions and data/contract issues.
+  - Where: All environments.
 
-| Description | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
-|-------------|------------|---------------|------------------|-----|------------------------|------------------------|
-| 90 CPU      | 3          | 100           | 18               | 30  | 150                    | 980                    |
-| 50 CPU      | 6          | 50            | 11               | 35  | 41                     | 200                    |
+- CPU / Memory per task / container
+  - Why: Determines whether Fargate CPU/memory sizing is adequate and informs autoscaling thresholds.
+  - Where: Staging/Prod and LocalStack for autoscaling validation.
 
-### Stop multiple instances
-<img width="1153" height="635" alt="image" src="https://github.com/user-attachments/assets/52f8362f-5d23-40b3-a46d-5c288c33b0a4" />
-<img width="1172" height="456" alt="image" src="https://github.com/user-attachments/assets/1d0aab3e-2bc4-4e29-b5ea-329e58753477" />
-<img width="1181" height="623" alt="image" src="https://github.com/user-attachments/assets/38b512ee-1a2b-43e9-a9b9-f77250816eff" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760224647 546" src="https://github.com/user-attachments/assets/bd070c04-f3c7-4481-b63f-dc2ed185a81b" />
+- ALB Target group healthy/unhealthy counts
+  - Why: Ensure load balancer routing health.
+  - Where: Staging/Prod and LocalStack.
 
-Stopped 3 instances, then the service recovered to 6 instances. Found a jitter on Locust test and CPU utilization as well.
+- Queue lengths / backlog (if present)
+  - Why: Backpressure and worker saturation indicators.
+  - Where: All environments if background processing exists.
 
-### Stop all instances
-<img width="1166" height="621" alt="image" src="https://github.com/user-attachments/assets/9adad0ad-fbc8-48e8-912f-b858b03a119b" />
-<img width="2928" height="1800" alt="total_requests_per_second_1760227106 183" src="https://github.com/user-attachments/assets/b67fd978-c83e-4917-a655-fcc1b9ae43b1" />
+Suggested charts (examples shown as ASCII samples and the data collection commands):
 
-Stopped all instances, then the service recoverd to 6 instances. Found some failed requests on Locust tests.
+1) Latency p50/p95/p99 over time (line chart)
 
-## Result:
-### How the system solved your Part II bottleneck
-**Part II bottleneck**
-- **Resource exhaustion**: CPU/memory limits on single instance
-- **No fault tolerance**: Instance failure = whole service down
-- **No load distribution**: Single point handles all concurrent requests
+   Sample (ASCII):
 
-**Part III Solution**
-- **Redundancy**  
-Load balancer provides multiple paths to service
-- **Load Distribution**  
-ALB distributes requests across healthy instances preventing any single instance from becoming bottleneck
-- **Elastic Scaling**  
-Auto Scaling automatically adds capacity when needed
-CPU-based scaling prevents problems from overload such as increasing request latency
-- **Fault Isolation**  
-Individual instance failures don't cascade to system failure
-Failed instances automatically replaced without manual intervention
+   p50: ──────▇▇▇▇▇▇▇▇▇▇▇
+   p95: ──────▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇
+   p99: ──────▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇
 
-### The role of each component
-**ALB**: Traffic dispatcher
-**Target Group**: Instance manager and health monitor
-**Auto Scaling**: Monitor performance and manage instance
+   How to get it:
+   - Locust/ab/wrk for load tests (staging), or built-in metrics from APM (prod).
 
-### Advantages of Horizontal scalling
-1. **Fault Tolerance**
-2. **Cost Efficiency**, scalling up and down according to the requirement, does not waste resource.
-3. **Load Distribution**, prevants single instance performance bottleneck, such as CPU core, network I/O.
+2) RPS vs Error rate (dual-axis)
 
+   - Use Locust to generate increase in RPS and observe error spikes to identify breaking points.
 
+3) CPU utilization vs Task count (autoscaling demonstration)
 
+   - For autoscaling verification: run a load test and show CPU increases, hitting the target value (e.g., 70%). The app-autoscaling target increases desired count from min (1) to max (4) as load increases.
 
+Data collection snippets (examples):
 
+  - Locust (simple):
 
+    locust -f tests/load_test.py --headless -u 200 -r 10 --run-time 5m --host=http://<ALB_DNS>
 
+  - Observe CloudWatch (or LocalStack logs) for CPU and memory metrics per task.
 
+---
 
+## How to reproduce quick checks (commands)
 
+1) Start LocalStack (Pro) with services: iam,ec2,ecs,ecr,elb,logs,application-autoscaling
 
+2) In `terraform` directory:
+
+  ```
+  terraform init
+  terraform apply -auto-approve
+  ```
+
+3) Test the app endpoints via ALB (LocalStack uses host mapping):
+
+  - Health: `curl -H "Host: order-processing-service-alb.elb.localhost.localstack.cloud" http://localhost:4566/health`
+  - Product search: `curl -H "Host: order-processing-service-alb.elb.localhost.localstack.cloud" "http://localhost:4566/v1/products/search?q=Alpha"`
+  - Post order: `curl -X POST -H "Host: order-processing-service-alb.elb.localhost.localstack.cloud" -H "Content-Type: application/json" -d '{"customer_id":12345, "items":[{"product_id":45501, "quantity":2}]}' http://localhost:4566/v1/orders/sync`
+
+4) Run a small Locust load test to validate scaling behavior.
+
+---
+
+## Recommendations & next steps (interview talking points)
+
+- Use LocalStack for fast infra iteration and Terraform validation; always validate in staging before production.
+- Instrument the app with structured logs and metrics (OpenTelemetry / Prometheus exporter). Push container-level metrics to CloudWatch in production.
+- Add CI gates: `terraform fmt`/`validate`, `go test`, `docker build`, `terraform plan` against LocalStack.
+
+---
+
+If you want, I can add pre-made CSV sample data and simple PNG charts (generated from recorded Locust runs) and embed them into this report. Tell me which target metrics you'd like plotted (latency percentiles, RPS, CPU vs tasks) and I will generate the sample charts.
+
+---
+
+Authorship: Generated and validated during development; include your public repository URL before submitting to Canvas.
