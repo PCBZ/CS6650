@@ -11,11 +11,11 @@ import (
 
 // OrderAPI contains all order-related business logic
 type OrderAPI struct {
-	orderStore *OrderStore
-	stats      OrderStats
-	totalOrders      int64
-	completedOrders  int64
-	averageTime      int64
+	orderStore      *OrderStore
+	stats           OrderStats
+	totalOrders     int64
+	completedOrders int64
+	averageTime     int64
 }
 
 // NewOrderAPI returns a new instance of OrderAPI
