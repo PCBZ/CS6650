@@ -1,0 +1,34 @@
+# Ignore build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+product-api
+
+# Ignore test binary
+*.test
+
+# Ignore output of the go coverage tool
+*.out
+
+# Ignore dependency directories
+.git
+.gitignore
+README.md
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
