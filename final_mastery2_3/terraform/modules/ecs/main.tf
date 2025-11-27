@@ -68,10 +68,12 @@ resource "aws_ecs_service" "this" {
     }
   }
 
-  # No lifecycle ignore rules needed when auto-scaling is disabled
-  # lifecycle {
-  #   ignore_changes = [desired_count]
-  # }
+  # When autoscaling is enabled, ignore desired_count changes to let autoscaling manage it
+  # Note: lifecycle blocks don't support conditional expressions, so we always ignore desired_count
+  # When autoscaling is disabled, Terraform will still set desired_count initially via min_capacity
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 }
 
 # Auto Scaling Target

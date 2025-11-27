@@ -47,7 +47,7 @@ variable "memory" {
 # Auto Scaling settings (disabled for Phase 1 testing)
 variable "min_capacity" {
   type        = number
-  default     = 1
+  default     = 2
   description = "Minimum number of ECS tasks"
 }
 
