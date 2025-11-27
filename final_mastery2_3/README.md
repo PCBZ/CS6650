@@ -1,4 +1,20 @@
 # Final Mastery 2
+````markdown
+
+## Overview / Features
+
+This project implements a small but complete microservice platform for product search and order processing. It includes the application code, containerization, infrastructure-as-code, and load-testing tooling so you can validate both functional behavior and scalability.
+
+Key features:
+
+- Product Search API (`GET /v1/products/search`) — search a generated product catalog by query term.
+- Order Processing API (`POST /v1/orders/sync`, `GET /v1/orders/stats`) — ingest orders and report aggregated statistics.
+- Docker multi-stage build for producing small production images.
+- Terraform modules to provision networking, ALB, ECS tasks, ECR and autoscaling (works with LocalStack for local simulation).
+- LocalStack-based integration testing and Terraform smoke tests for CI-friendly validation.
+- Load testing scripts (Locust) to validate throughput, latency and autoscaling behavior.
+
+# Final Mastery 2
 This report summarizes the repository, architecture, deployment choices, and the metrics to monitor in each environment.
 
 ## Repo information
