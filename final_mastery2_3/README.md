@@ -1,91 +1,57 @@
-## Short Project Report / 简短项目报告
+# Final Mastery 2
+This report summarizes the repository, architecture, deployment choices, and the metrics to monitor in each environment.
 
-This report summarizes the repository, architecture, deployment choices, and the metrics to monitor in each environment. It's designed to be handed to an interviewer and kept under 5 pages.
-
-### Repo information / 仓库信息
-
+## Repo information
 - Repository path: `final_mastery2_3` (local)
 - Project: Order Processing & Product Search microservice (Go / Gin)
 - Key technologies: Go (Gin), Docker, Terraform, LocalStack (Pro), ECS (Fargate model), ALB, CloudWatch (simulated), Locust for load testing
 
-Replace with your public repo URL before sharing: https://github.com/<your-username>/final_mastery2_3
+Project URL: https://github.com/PCBZ/CS6650/edit/main/final_mastery2_3
 
 ---
 
-## Architecture (diagram)
-
-Below is an architecture diagram (Mermaid). Use this when presenting the system topology.
+## Architecture
+Below is an architecture diagram
 
 ```mermaid
-architecture-beta
-  group internet(internet)[Internet]
-
-  group alb(logos:aws-elb)[ALB] in internet
-  service alb_instance(logos:aws-elb)[ALB / Listener] in alb
-
-  group vpc(cloud)[VPC]
-  group public_subnets(cloud)[Public Subnets] in vpc
-  group private_subnets(cloud)[Private Subnets] in vpc
-
-  service nat(gateway)[NAT Gateway] in public_subnets
-  service ecs_cluster(server)[ECS Cluster] in private_subnets
-  service ecs_service(server)[ECS Service (Fargate)] in ecs_cluster
-  service tasks(server)[Task (container)] in ecs_service
-  service ecr(database)[ECR Repo] in vpc
-  service logs(database)[CloudWatch Logs] in vpc
-
-  alb_instance:R -- L:ecs_service
-  ecs_service:B -- T:tasks
-  tasks:R -- L:logs
-  tasks:L -- R:ecr
-  nat:R -- L:ecs_service
+graph TD
+    A[Client] --> B[ALB]
+    B --> C[Target Group]
+    C --> D[ECS Task]
+    C --> E[ECS Task]
+    C --> F[ECS Task]
+    C --> G[ECS Task]
+    
+    H[Auto Scaling]
+    H -.-> D
+    H -.-> E
+    H -.-> F
+    H -.-> G
+    
+    style B fill:#ff9999
+    style C fill:#99ff99
+    style H fill:#99ccff
 
 ``` 
+---
 
-Notes:
-- ALB terminates HTTP and forwards to container port 8080.
-- ECR stores built Docker images (pushed via Terraform/Docker provider to LocalStack in tests).
-- CloudWatch receives container logs and metrics (simulated in LocalStack testing).
+## Deployment environments and when to use each
+### LocalStack vs. AWS Configuration
+| Configuration Aspect | AWS Deployment | LocalStack Deployment |
+|---------------------|----------------|----------------------|
+| **Provider Credentials** | Real AWS access key | `"test"` (dummy value) |
+| **Service Endpoints** | Not needed (uses default AWS endpoints) | Required: All services point to `http://localhost:4566` |
+| **ECR Registry Address** | `975050147762.dkr.ecr.us-west-2.amazonaws.com` | `000000000000.dkr.ecr.us-west-2.localhost.localstack.cloud:4566` |
+| **Authentication** | Uses `data.aws_ecr_authorization_token` | Hardcoded `username="test"`, `password="test"` |
+| **IAM Roles** | Uses existing `LabRole` | Creates local role: `aws_iam_role.ecs_execution_role` |
+| **localstack_endpoint** | Not needed | Required: `default = "http://localhost:4566"` |
+| **Prerequisites** | AWS CLI configured, valid credentials | LocalStack running on `localhost:4566` |
 
 ---
 
-## Deployment environments and when to use each / 部署环境与适用场景
+## Metrics (LocalStack vs. AWS)
 
-1) Local (developer machine)
-   - Tools: local Docker, `go run`, unit tests, small integration tests.
-   - When to use: fast iteration; writing features and unit tests; debugging business logic.
-   - Pros: instant feedback, cheap, no infra costs.
-   - Cons: not representative of network, IAM, and distributed load.
 
-2) LocalStack (full-stack simulation)
-   - Tools: LocalStack (Pro), Terraform configured to point to LocalStack endpoints, Docker images pushed to LocalStack ECR, run ECS tasks simulated by LocalStack.
-   - When to use: validate IaC (Terraform) and higher-level integration (ECR/ECS/ALB) without cloud cost; smoke-test deployments and infra changes.
-   - Pros: near-real AWS API compatibility, good for CI prechecks, fast iteration on infra code.
-   - Cons: slight behavioral differences from real AWS; some services may be simulated or behind feature flags.
-
-3) Staging (real cloud, isolated account)
-   - Tools: real AWS account (or sandbox), CI pipeline deploys to staging, end-to-end load tests.
-   - When to use: final verification before production, non-destructive load tests, security review.
-   - Pros: identical to production environment, enables safe scale testing.
-   - Cons: cost and IAM/cleanup overhead.
-
-4) Production
-   - Tools: real AWS infrastructure, full monitoring and alerting, autoscaling enabled.
-   - When to use: serving real traffic.
-   - Pros: reliable, scalable.
-   - Cons: requires strict change control and monitoring.
-
-Concrete evidence / examples of use:
-- LocalStack: This project uses LocalStack to simulate ECS and ALB for CI and manual validation. Example command used during development:
-
-  - Start LocalStack with required services (iam, ec2, ecs, ecr, elb, logs, application-autoscaling).
-  - Run `terraform init && terraform apply -auto-approve` pointed at LocalStack endpoint (http://localhost:4566) to create the simulated ECR, ECS cluster, ALB and autoscaling target/policy.
-
-  Observed result in this repo: terraform plan created 35 resources (VPC, subnets, ALB, ECS, auto-scaling target/policy) and after apply the ALB DNS resolved to `order-processing-service-alb.elb.localhost.localstack.cloud` (LocalStack host mapping).
-
----
-
-## Metrics and which are meaningful in each environment / 各环境重要指标
 
 Core metrics to collect and why:
 
@@ -178,3 +144,4 @@ If you want, I can add pre-made CSV sample data and simple PNG charts (generated
 ---
 
 Authorship: Generated and validated during development; include your public repository URL before submitting to Canvas.
+
