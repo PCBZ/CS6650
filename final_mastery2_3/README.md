@@ -98,16 +98,16 @@ Testing search API
 **LocalStack Deployment**
 | Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
 |-------|------------|---------------|------------------|-----|------------------------|------------------------|
-| 20    | 1          |               |                  | 300 | 60                     | 120                    |
-| 40    | 1          |               |                  | 250 | 150                    | 330                    |
-| 60    | 1          |               |                  | 300 | 200                    | 400                    |
+| 20    | 2          |               |                  | 320 | 60                     | 100                    |
+| 40    | 2          |               |                  | 310 | 130                    | 210                    |
+| 60    | 2          |               |                  | 310 | 180                    | 310                    |
 
-<img width="1000" height="600" alt="Figure_1" src="https://github.com/user-attachments/assets/3d5cc1aa-fb20-47ac-b086-7c6f8df0ab8a" />
+<img width="1000" height="600" alt="Figure_1" src="https://github.com/user-attachments/assets/feb0fcd2-b9bf-47fa-b4b2-7f7ea313b40e" />
 
-<img width="1000" height="600" alt="Figure_2" src="https://github.com/user-attachments/assets/f8f7ca2c-65a7-4e9d-ad57-03aa9217ef73" />
+<img width="1000" height="600" alt="Figure_2" src="https://github.com/user-attachments/assets/89842135-4fa7-4549-990b-8e2c74ba945a" />
 
 ### Deploy Duration
-<img width="1000" height="600" alt="Figure_3" src="https://github.com/user-attachments/assets/ce7e02f6-f6ef-4bba-b5a9-8d574693625d" />
+<img width="1000" height="600" alt="Figure_3" src="https://github.com/user-attachments/assets/6a30337e-8932-434c-b2bf-5c6a81a521a3" />
 
 ---
 
@@ -134,5 +134,6 @@ Use AWS when:
 - Auto-scaling needed: Scales from 130 to 500 RPS automatically
 - Enterprise features: CloudWatch monitoring, security compliance
 - High availability: Multi-AZ deployment and disaster recovery
+
 
 
