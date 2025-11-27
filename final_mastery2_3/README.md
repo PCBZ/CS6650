@@ -23,7 +23,7 @@ Project URL: https://github.com/PCBZ/CS6650/edit/main/final_mastery2_3
 ---
 
 ## Architecture
-Below is an architecture diagram
+Below is the architecture diagram for both LocalStack and AWS environment.
 
 ```mermaid
 graph TD
@@ -134,6 +134,7 @@ Use AWS when:
 - Auto-scaling needed: Scales from 130 to 500 RPS automatically
 - Enterprise features: CloudWatch monitoring, security compliance
 - High availability: Multi-AZ deployment and disaster recovery
+
 
 
 
