@@ -1,5 +1,4 @@
 # Final Mastery 2
-````markdown
 
 ## Overview / Features
 
@@ -14,9 +13,6 @@ Key features:
 - LocalStack-based integration testing and Terraform smoke tests for CI-friendly validation.
 - Load testing scripts (Locust) to validate throughput, latency and autoscaling behavior.
 
-# Final Mastery 2
-This report summarizes the repository, architecture, deployment choices, and the metrics to monitor in each environment.
-
 ## Repo information
 - Repository path: `final_mastery2_3` (local)
 - Project: Order Processing & Product Search microservice (Go / Gin)
@@ -27,7 +23,7 @@ Project URL: https://github.com/PCBZ/CS6650/edit/main/final_mastery2_3
 ---
 
 ## Architecture
-Below is an architecture diagram
+Below is the architecture diagram for both LocalStack and AWS environment.
 
 ```mermaid
 graph TD
@@ -55,109 +51,90 @@ graph TD
 ### LocalStack vs. AWS Configuration
 | Configuration Aspect | AWS Deployment | LocalStack Deployment |
 |---------------------|----------------|----------------------|
-| **Provider Credentials** | Real AWS access key | `"test"` (dummy value) |
-| **Service Endpoints** | Not needed (uses default AWS endpoints) | Required: All services point to `http://localhost:4566` |
-| **ECR Registry Address** | `975050147762.dkr.ecr.us-west-2.amazonaws.com` | `000000000000.dkr.ecr.us-west-2.localhost.localstack.cloud:4566` |
-| **Authentication** | Uses `data.aws_ecr_authorization_token` | Hardcoded `username="test"`, `password="test"` |
-| **IAM Roles** | Uses existing `LabRole` | Creates local role: `aws_iam_role.ecs_execution_role` |
-| **localstack_endpoint** | Not needed | Required: `default = "http://localhost:4566"` |
-| **Prerequisites** | AWS CLI configured, valid credentials | LocalStack running on `localhost:4566` |
+| **Provider Credentials** | Real AWS access keys and secrets | Dummy credentials (`"test"` values) |
+| **Service Endpoints** | Default AWS regional endpoints | All services point to `localhost:4566` |
+| **ECR Registry Address** | AWS account-specific ECR URLs | LocalStack simulated ECR endpoints |
+| **Authentication** | AWS IAM-based authentication | Mock authentication with test credentials |
+| **IAM Roles** | Production IAM roles and policies | Locally created/simulated IAM resources |
+| **Monitoring** | CloudWatch integration available | Limited/simulated monitoring capabilities |
+
+**For example:**
+
+Create a local role instead of using existed `LabRole` for LocalStack deployment.
+
+```terraform
+resource "aws_iam_role" "ecs_execution_role" {
+  name = "${var.service_name}-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+```
 
 ---
 
-## Metrics (LocalStack vs. AWS)
+## Metrics (RPS & Response Time)
+Testing search API
 
+### RPS & Response time
 
+**AWS Deployment**
+| Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
+|-------|------------|---------------|------------------|-----|------------------------|------------------------|
+| 20    | 2          | 60            | 10               | 120 | 150                    | 300                    |
+| 40    | 3          | 45            | 10               | 130 | 260                    | 470                    |
+| 60    | 4          | 98            | 12               | 500 | 80                     | 320                    |
 
-Core metrics to collect and why:
+**LocalStack Deployment**
+| Users | Task Count | CPU Usage (%) | Memory Usage (%) | RPS | 50% Response Time (ms) | 95% Response Time (ms) |
+|-------|------------|---------------|------------------|-----|------------------------|------------------------|
+| 20    | 2          |               |                  | 320 | 60                     | 100                    |
+| 40    | 2          |               |                  | 310 | 130                    | 210                    |
+| 60    | 2          |               |                  | 310 | 180                    | 310                    |
 
-- Latency (p50 / p95 / p99)
-  - Why: Shows user-perceived response time and tail latency.
-  - Where: All environments. In Local use simple latency histograms. In Staging/Prod use real APM or CloudWatch.
+<img width="1000" height="600" alt="Figure_1" src="https://github.com/user-attachments/assets/feb0fcd2-b9bf-47fa-b4b2-7f7ea313b40e" />
 
-- Request rate (RPS)
-  - Why: Understand throughput and scaling needs.
-  - Where: Staging and Prod (drive with load test in Staging). In LocalStack, use to validate autoscaling triggers.
+<img width="1000" height="600" alt="Figure_2" src="https://github.com/user-attachments/assets/89842135-4fa7-4549-990b-8e2c74ba945a" />
 
-- Error rate (4xx/5xx)
-  - Why: Detect regressions and data/contract issues.
-  - Where: All environments.
-
-- CPU / Memory per task / container
-  - Why: Determines whether Fargate CPU/memory sizing is adequate and informs autoscaling thresholds.
-  - Where: Staging/Prod and LocalStack for autoscaling validation.
-
-- ALB Target group healthy/unhealthy counts
-  - Why: Ensure load balancer routing health.
-  - Where: Staging/Prod and LocalStack.
-
-- Queue lengths / backlog (if present)
-  - Why: Backpressure and worker saturation indicators.
-  - Where: All environments if background processing exists.
-
-Suggested charts (examples shown as ASCII samples and the data collection commands):
-
-1) Latency p50/p95/p99 over time (line chart)
-
-   Sample (ASCII):
-
-   p50: ──────▇▇▇▇▇▇▇▇▇▇▇
-   p95: ──────▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇
-   p99: ──────▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇
-
-   How to get it:
-   - Locust/ab/wrk for load tests (staging), or built-in metrics from APM (prod).
-
-2) RPS vs Error rate (dual-axis)
-
-   - Use Locust to generate increase in RPS and observe error spikes to identify breaking points.
-
-3) CPU utilization vs Task count (autoscaling demonstration)
-
-   - For autoscaling verification: run a load test and show CPU increases, hitting the target value (e.g., 70%). The app-autoscaling target increases desired count from min (1) to max (4) as load increases.
-
-Data collection snippets (examples):
-
-  - Locust (simple):
-
-    locust -f tests/load_test.py --headless -u 200 -r 10 --run-time 5m --host=http://<ALB_DNS>
-
-  - Observe CloudWatch (or LocalStack logs) for CPU and memory metrics per task.
+### Deploy Duration
+<img width="1000" height="600" alt="Figure_3" src="https://github.com/user-attachments/assets/6a30337e-8932-434c-b2bf-5c6a81a521a3" />
 
 ---
 
-## How to reproduce quick checks (commands)
+## When it is best to deploy
+### LocalStack Environment
 
-1) Start LocalStack (Pro) with services: iam,ec2,ecs,ecr,elb,logs,application-autoscaling
+Best for Development & Testing
 
-2) In `terraform` directory:
+Use LocalStack when:
+- Feature development: 30-second deployments vs 5+ minutes on AWS
+- Cost optimization: $0 infrastructure vs $400+/month AWS costs
+- Team development: Consistent environment for all developers
+- CI/CD testing: Validate infrastructure without cloud expenses
 
-  ```
-  terraform init
-  terraform apply -auto-approve
-  ```
+Performance: Handles 300 RPS consistently, 60ms response time at low load
 
-3) Test the app endpoints via ALB (LocalStack uses host mapping):
+### AWS Environment
 
-  - Health: `curl -H "Host: order-processing-service-alb.elb.localhost.localstack.cloud" http://localhost:4566/health`
-  - Product search: `curl -H "Host: order-processing-service-alb.elb.localhost.localstack.cloud" "http://localhost:4566/v1/products/search?q=Alpha"`
-  - Post order: `curl -X POST -H "Host: order-processing-service-alb.elb.localhost.localstack.cloud" -H "Content-Type: application/json" -d '{"customer_id":12345, "items":[{"product_id":45501, "quantity":2}]}' http://localhost:4566/v1/orders/sync`
+Best for Production & Scale
 
-4) Run a small Locust load test to validate scaling behavior.
+Use AWS when:
 
----
+- Live traffic: Serving real users with SLA requirements
+- Auto-scaling needed: Scales from 130 to 500 RPS automatically
+- Enterprise features: CloudWatch monitoring, security compliance
+- High availability: Multi-AZ deployment and disaster recovery
 
-## Recommendations & next steps (interview talking points)
 
-- Use LocalStack for fast infra iteration and Terraform validation; always validate in staging before production.
-- Instrument the app with structured logs and metrics (OpenTelemetry / Prometheus exporter). Push container-level metrics to CloudWatch in production.
-- Add CI gates: `terraform fmt`/`validate`, `go test`, `docker build`, `terraform plan` against LocalStack.
 
----
-
-If you want, I can add pre-made CSV sample data and simple PNG charts (generated from recorded Locust runs) and embed them into this report. Tell me which target metrics you'd like plotted (latency percentiles, RPS, CPU vs tasks) and I will generate the sample charts.
-
----
-
-Authorship: Generated and validated during development; include your public repository URL before submitting to Canvas.
 
