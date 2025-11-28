@@ -1,53 +1,30 @@
 # Final Mastery 2
 
-## Overview / Features
+# Overview / Features
 
-This project implements a small but complete microservice platform for product search and order processing. It includes the application code, containerization, infrastructure-as-code, and load-testing tooling so you can validate both functional behavior and scalability.
+This project implements a small but complete microservice platform for product search and order processing. It includes the application code, containerization, infrastructure-as-code, and load-testing tooling so you can validate both functional behavior and scalability. The project is based on Homework6.
 
 Key features:
 
 - Product Search API (`GET /v1/products/search`) — search a generated product catalog by query term.
 - Order Processing API (`POST /v1/orders/sync`, `GET /v1/orders/stats`) — ingest orders and report aggregated statistics.
-- Docker multi-stage build for producing small production images.
-- Terraform modules to provision networking, ALB, ECS tasks, ECR and autoscaling (works with LocalStack for local simulation).
-- LocalStack-based integration testing and Terraform smoke tests for CI-friendly validation.
+- Terraform modules to provision networking, ALB, ECS tasks, ECR and autoscaling.
 - Load testing scripts (Locust) to validate throughput, latency and autoscaling behavior.
 
 ## Repo information
-- Repository path: `final_mastery2_3` (local)
-- Project: Order Processing & Product Search microservice (Go / Gin)
-- Key technologies: Go (Gin), Docker, Terraform, LocalStack (Pro), ECS (Fargate model), ALB, CloudWatch (simulated), Locust for load testing
-
-Project URL: https://github.com/PCBZ/CS6650/edit/main/final_mastery2_3
+- Repository path: `final_mastery2`
+- Project URL: https://github.com/PCBZ/CS6650/edit/main/final_mastery2
 
 ---
 
 ## Architecture
 Below is the architecture diagram for both LocalStack and AWS environment.
 
-```mermaid
-graph TD
-    A[Client] --> B[ALB]
-    B --> C[Target Group]
-    C --> D[ECS Task]
-    C --> E[ECS Task]
-    C --> F[ECS Task]
-    C --> G[ECS Task]
-    
-    H[Auto Scaling]
-    H -.-> D
-    H -.-> E
-    H -.-> F
-    H -.-> G
-    
-    style B fill:#ff9999
-    style C fill:#99ff99
-    style H fill:#99ccff
+<img width="1183" height="708" alt="Untitled diagram-2025-11-28-053335" src="https://github.com/user-attachments/assets/e2fee023-b11f-420b-bef1-5da646892c79" />
 
-``` 
 ---
 
-## Deployment environments and when to use each
+## Deployment Environments Comparison
 ### LocalStack vs. AWS Configuration
 | Configuration Aspect | AWS Deployment | LocalStack Deployment |
 |---------------------|----------------|----------------------|
@@ -84,7 +61,7 @@ resource "aws_iam_role" "ecs_execution_role" {
 ---
 
 ## Metrics (RPS & Response Time)
-Testing search API
+Load test search API
 
 ### RPS & Response time
 
@@ -108,6 +85,16 @@ Testing search API
 
 ### Deploy Duration
 <img width="1000" height="600" alt="Figure_3" src="https://github.com/user-attachments/assets/6a30337e-8932-434c-b2bf-5c6a81a521a3" />
+
+### Performance Analysis Summary
+
+The load testing results reveal distinct performance characteristics between the 2 environments:
+
+**LocalStack demonstrates consistent but limited scalability** - maintaining steady ~310 RPS throughput with linear response time degradation (60ms → 130ms → 180ms). The fixed 2-task configuration shows predictable behavior suitable for development and testing scenarios.
+
+**AWS showcases dynamic auto-scaling capabilities** - achieving dramatic performance improvement at high load, with RPS jumping from 130 to 500 and response time improving from 260ms to 80ms at 60 users. This 3x throughput increase demonstrates the production environment's ability to handle variable workloads.
+
+**Key insight**: LocalStack provides superior development experience with faster, more predictable responses at low scale, while AWS Production excels at handling real-world traffic patterns through intelligent auto-scaling. The 49% faster deployment time (1:59 vs 3:53) further reinforces LocalStack's value for rapid development cycles.
 
 ---
 
@@ -134,6 +121,7 @@ Use AWS when:
 - Auto-scaling needed: Scales from 130 to 500 RPS automatically
 - Enterprise features: CloudWatch monitoring, security compliance
 - High availability: Multi-AZ deployment and disaster recovery
+
 
 
 
